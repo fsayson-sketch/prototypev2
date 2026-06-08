@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ensemble FER</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.png')}}" type="image/x-icon">
+</head>
+
+<body>
+    {% include "components/header.html" %}
+
+    <main class="main-content">
+        {% block content %} {% endblock %}
+    </main>
+
+    <video id="video-feed-dash" autoplay muted playsinline></video>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script defer src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+
+</html>
