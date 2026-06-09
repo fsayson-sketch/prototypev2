@@ -1128,280 +1128,503 @@ function downloadFile(content, filename) {
 }
 
 // Helper function to capture a chart image for PDF export without mutating the live chart
-function getChartImageForPDF(chartInstance) {
-    if (!chartInstance) return null;
+function getChartImageForPDF(chartInstance, maxW, maxH) {
+    const canvas = chartInstance.canvas;
 
-    // Create a hidden temporary canvas for export rendering
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = chartInstance.canvas.width;
-    tempCanvas.height = chartInstance.canvas.height;
-    tempCanvas.style.position = 'absolute';
-    tempCanvas.style.left = '-9999px';
-    tempCanvas.style.top = '-9999px';
-    document.body.appendChild(tempCanvas);
+    // Save original chart options
+    const originalColor  = Chart.defaults.color;
+    const originalBorder = Chart.defaults.borderColor;
 
-    const tempCtx = tempCanvas.getContext('2d');
+    // Override to dark theme for PDF
+    Chart.defaults.color       = '#1e1e1e';   // DARK text
+    Chart.defaults.borderColor = '#dcd2d2';   // DIVIDER lines
 
-    // Clone chart data and options for export
-    const exportData = JSON.parse(JSON.stringify(chartInstance.data));
-    const exportOptions = JSON.parse(JSON.stringify(chartInstance.options));
+    // Patch this specific chart's options
+    const opts = chartInstance.options;
 
-    // Ensure white background and black text for readability
-    exportOptions.backgroundColor = '#ffffff';
-    exportOptions.plugins = exportOptions.plugins || {};
-    exportOptions.plugins.legend = exportOptions.plugins.legend || {};
-    exportOptions.plugins.legend.labels = exportOptions.plugins.legend.labels || {};
-    exportOptions.plugins.legend.labels.color = '#000000';
-    exportOptions.plugins.legend.labels.font = exportOptions.plugins.legend.labels.font || {};
-    exportOptions.plugins.legend.labels.font.size = 12;
+    const patchScales = (scales) => {
+        if (!scales) return;
+        Object.values(scales).forEach(axis => {
+            if (axis.ticks)      axis.ticks.color      = '#1e1e1e';
+            if (axis.grid)       axis.grid.color        = '#e0d8d8';
+            if (axis.title)      axis.title.color       = '#1e1e1e';
+        });
+    };
 
-    if (exportOptions.scales) {
-        if (exportOptions.scales.y) {
-            exportOptions.scales.y.ticks = exportOptions.scales.y.ticks || {};
-            exportOptions.scales.y.ticks.color = '#000000';
-            exportOptions.scales.y.ticks.font = exportOptions.scales.y.ticks.font || {};
-            exportOptions.scales.y.ticks.font.size = 11;
-        }
-        if (exportOptions.scales.x) {
-            exportOptions.scales.x.ticks = exportOptions.scales.x.ticks || {};
-            exportOptions.scales.x.ticks.color = '#000000';
-            exportOptions.scales.x.ticks.font = exportOptions.scales.x.ticks.font || {};
-            exportOptions.scales.x.ticks.font.size = 11;
-        }
-        if (exportOptions.scales.r) {
-            exportOptions.scales.r.ticks = exportOptions.scales.r.ticks || {};
-            exportOptions.scales.r.ticks.color = '#000000';
-            exportOptions.scales.r.ticks.font = exportOptions.scales.r.ticks.font || {};
-            exportOptions.scales.r.ticks.font.size = 11;
-        }
-    }
+    const patchPlugins = (plugins) => {
+        if (!plugins) return;
+        if (plugins.legend?.labels)  plugins.legend.labels.color  = '#1e1e1e';
+        if (plugins.title)           plugins.title.color           = '#1e1e1e';
+        if (plugins.tooltip)         plugins.tooltip.titleColor    = '#1e1e1e';
+    };
 
-    exportOptions.animation = false;
-    exportOptions.responsive = false;
-    exportOptions.maintainAspectRatio = false;
+    patchScales(opts.scales);
+    patchPlugins(opts.plugins);
 
-    const tempChart = new Chart(tempCtx, {
-        type: chartInstance.config.type,
-        data: exportData,
-        options: exportOptions
-    });
+    // Force white background on canvas before snapshot
+    chartInstance.update('none');  // re-render without animation
 
-    tempChart.update();
-    const imageData = tempCanvas.toDataURL('image/png');
-    tempChart.destroy();
-    document.body.removeChild(tempCanvas);
+    const ctx = canvas.getContext('2d');
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
 
-    return imageData;
+    const img = chartInstance.toBase64Image('image/png', 1.0);
+
+    // Restore original colors
+    Chart.defaults.color       = originalColor;
+    Chart.defaults.borderColor = originalBorder;
+    patchScales(opts.scales);    // restore by re-running with original defaults
+    patchPlugins(opts.plugins);
+    chartInstance.update('none');
+
+    // Compute fitted dimensions
+    const ratio  = canvas.width / canvas.height;
+    let w = maxW;
+    let h = w / ratio;
+    if (h > maxH) { h = maxH; w = h * ratio; }
+
+    return { img, w, h };
 }
 
 // PDF Export with Charts and Data
 async function exportPDF() {
     try {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4'
-        });
 
-        const now = new Date();
-        const dateStr = now.toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' });
-        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        // Page dimensions
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const margin = 15;
-        const contentWidth = pageWidth - (2 * margin);
-
-        // Title
-        doc.setFontSize(16);
-        doc.setFont(undefined, 'bold');
-        doc.text('Facial Expression Analysis Report', margin, 15);
-
-        // Metadata
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
-        doc.text(`Date: ${dateStr}`, margin, 23);
-        doc.text(`Time: ${timeStr}`, margin, 28);
-        doc.text(`Total Observations: ${sessionLog.size}`, margin, 33);
-        doc.text(`Average Session Duration: ${(sessionLog.size * 0.25).toFixed(1)} seconds`, margin, 38);
-
-        // Add separator line
-        doc.setDrawColor(255, 215, 0);
-        doc.setLineWidth(0.5);
-        doc.line(margin, 41, pageWidth - margin, 41);
-
-        let yPos = 48;
-
-        // 1. Emotion Distribution Chart (Doughnut - best aspect ratio)
-        if (emotionChartInstance) {
-            const chartImage = getChartImageForPDF(emotionChartInstance);
-            const chartWidth = 90;
-            const chartHeight = 90;
-            const xPos = margin + (contentWidth - chartWidth) / 2;
-            doc.addImage(chartImage, 'PNG', xPos, yPos, chartWidth, chartHeight);
-            
-            doc.setFontSize(13);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(0, 0, 0);
-            doc.text('Emotion Distribution', margin, yPos - 2);
-            
-            yPos += 100;
+        // ── Compute stats first so we can bail early if no data ──
+        if (sessionLog.size === 0) {
+            alert('No session data to export. Start a logging session first.');
+            return;
         }
 
-        // Check if we need a new page
-        if (yPos > 200) {
-            doc.addPage();
-            yPos = 15;
-        }
-
-        // 2. Eye Contact Tracking Chart (Line - wider aspect)
-        if (eyeContactChartInstance) {
-            doc.setFontSize(12);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(0, 0, 0);
-            doc.text('Eye Contact Tracking', margin, yPos);
-            yPos += 6;
-            
-            const chartImage = getChartImageForPDF(eyeContactChartInstance);
-            const chartWidth = contentWidth;
-            const chartHeight = 100;
-            doc.addImage(chartImage, 'PNG', margin, yPos, chartWidth, chartHeight);
-            yPos += chartHeight + 8;
-        }
-
-        // 3. Smile Detection Chart (Bar - wider aspect)
-        if (yPos > 210) {
-            doc.addPage();
-            yPos = 15;
-        }
-
-        if (smileChartInstance) {
-            doc.setFontSize(12);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(0, 0, 0);
-            doc.text('Smile Detection', margin, yPos);
-            yPos += 6;
-            
-            const chartImage = getChartImageForPDF(smileChartInstance);
-            const chartWidth = contentWidth;
-            const chartHeight = 100;
-            doc.addImage(chartImage, 'PNG', margin, yPos, chartWidth, chartHeight);
-            yPos += chartHeight + 8;
-        }
-
-        // 4. Micro-Expressions Chart (Radar - square aspect)
-        if (yPos > 210) {
-            doc.addPage();
-            yPos = 15;
-        }
-
-        if (microExpChartInstance) {
-            doc.setFontSize(12);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(0, 0, 0);
-            doc.text('Micro-Expressions Analysis', margin, yPos);
-            yPos += 6;
-            
-            const chartImage = getChartImageForPDF(microExpChartInstance);
-            const chartWidth = 90;
-            const chartHeight = 90;
-            const xPos = margin + (contentWidth - chartWidth) / 2;
-            doc.addImage(chartImage, 'PNG', xPos, yPos, chartWidth, chartHeight);
-            yPos += chartHeight + 10;
-        }
-
-        // 5. Expression Timeline Chart (Bar chart showing emotion frequency - compact size)
-        if (yPos > 210) {
-            doc.addPage();
-            yPos = 15;
-        }
-
-        if (timelineChartInstance) {
-            doc.setFontSize(12);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(0, 0, 0);
-            doc.text('Expression Timeline', margin, yPos);
-            yPos += 6;
-            
-            const chartImage = getChartImageForPDF(timelineChartInstance);
-            const chartWidth = contentWidth;
-            const chartHeight = 100;
-            doc.addImage(chartImage, 'PNG', margin, yPos, chartWidth, chartHeight);
-            yPos += chartHeight + 8;
-        }
-
-        // Add Statistics Summary on new page
-        doc.addPage();
-        yPos = 15;
-
-        doc.setFontSize(14);
-        doc.setFont(undefined, 'bold');
-        doc.text('Statistics Summary', margin, yPos);
-        yPos += 10;
-
-        // Compute statistics
-        const counts = {};
-        const confByEmo = {};
-        let current = sessionLog.head;
-        let totalConf = 0;
+        const counts     = {};
+        const confByEmo  = {};
+        let current      = sessionLog.head;
+        let totalConf    = 0;
 
         while (current) {
             const { label, confidence } = current.data;
-            counts[label] = (counts[label] || 0) + 1;
-            confByEmo[label] = (confByEmo[label] || []);
+            counts[label]    = (counts[label] || 0) + 1;
+            confByEmo[label] = confByEmo[label] || [];
             confByEmo[label].push(confidence);
             totalConf += confidence;
             current = current.next;
         }
 
-        const total = sessionLog.size;
-        const avgConf = (totalConf / total * 100).toFixed(1);
-        const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+        const total       = sessionLog.size;
+        const avgConf     = (totalConf / total * 100).toFixed(1);
+        const dominant    = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
         const dominantPct = (dominant[1] / total * 100).toFixed(1);
+        const lowConfCount = Array.from({ length: total }, (_, i) => {
+            let n = sessionLog.head;
+            for (let j = 0; j < i; j++) n = n?.next;
+            return n?.data?.confidence;
+        }).filter(c => c !== undefined && c < 0.5).length;
 
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
-        doc.text(`Average Confidence: ${avgConf}%`, margin, yPos);
-        yPos += 6;
-        doc.text(`Dominant Emotion: ${dominant[0]} (${dominantPct}%)`, margin, yPos);
-        yPos += 10;
+        const now      = new Date();
+        const dateStr  = now.toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' });
+        const timeStr  = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const duration = (total * 0.25).toFixed(0);
 
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'bold');
-        doc.text('Emotion Breakdown:', margin, yPos);
-        yPos += 8;
+        // ── Colors ──
+        const MAROON  = [128, 0, 0];
+        const GOLD    = [200, 160, 0];
+        const WHITE   = [255, 255, 255];
+        const DARK    = [30, 30, 30];
+        const MID     = [90, 90, 90];
+        const LIGHT   = [150, 150, 150];
+        const PANEL   = [248, 245, 245];
+        const DIVIDER = [220, 210, 210];
+
+        const emotionPalette = {
+            Happy:   [57,  255, 180],
+            Sad:     [255, 85,  170],
+            Fear:    [170, 85,  255],
+            Angry:   [255, 85,  85],
+            Disgust: [141, 182, 0],
+            Surprise:[255, 107, 0],
+            Neutral: [85,  170, 255],
+        };
+
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const W   = doc.internal.pageSize.getWidth();   // 210
+        const H   = doc.internal.pageSize.getHeight();  // 297
+        const M   = 14;   // margin
+        const CW  = W - M * 2;  // content width
+
+        let y = 0;
+
+        // ── Helpers ──
+        const setColor  = (r, g, b) => { doc.setTextColor(r, g, b); };
+        const setFill   = (r, g, b) => { doc.setFillColor(r, g, b); };
+        const setDraw   = (r, g, b) => { doc.setDrawColor(r, g, b); };
+        const newPage   = () => {
+            doc.addPage();
+            y = 0;
+            drawPageFooter();
+            drawPageHeader(false);
+        };
+        const checkPage = (needed = 20) => { if (y + needed > H - 18) newPage(); };
+
+        function drawPageFooter() {
+            const pg = doc.internal.getCurrentPageInfo().pageNumber;
+            setFill(...MAROON);
+            doc.rect(0, H - 10, W, 10, 'F');
+            setColor(...WHITE);
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'italic');
+            doc.text('Ensemble CNN–CatBoost Facial Expression Recognition System  |  For professional use only', M, H - 3.5);
+            doc.text(`Page ${pg}`, W - M, H - 3.5, { align: 'right' });
+        }
+
+        function drawPageHeader(isCover = false) {
+            if (isCover) return;
+            setFill(...MAROON);
+            doc.rect(0, 0, W, 12, 'F');
+            setColor(...WHITE);
+            doc.setFontSize(7.5);
+            doc.setFont('helvetica', 'bold');
+            doc.text('FACIAL EXPRESSION ANALYSIS REPORT', M, 7.5);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`${dateStr}  |  ${timeStr}`, W - M, 7.5, { align: 'right' });
+            y = 17;
+        }
+
+        function sectionTitle(label) {
+            checkPage(14);
+            y += 3;
+            setFill(...MAROON);
+            doc.rect(M, y, 3, 6, 'F');
+            setColor(...MAROON);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text(label.toUpperCase(), M + 5, y + 4.5);
+            setDraw(...DIVIDER);
+            doc.setLineWidth(0.3);
+            doc.line(M + 5, y + 7, W - M, y + 7);
+            y += 11;
+        }
+
+        function labelValue(label, value, x, yy, labelW = 45) {
+            setColor(...LIGHT);
+            doc.setFontSize(7.5);
+            doc.setFont('helvetica', 'normal');
+            doc.text(label, x, yy);
+            setColor(...DARK);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.text(String(value), x + labelW, yy);
+        }
+
+        // ════════════════════════════════════════════
+        // PAGE 1 — COVER
+        // ════════════════════════════════════════════
+
+        // Header bar
+        setFill(...MAROON);
+        doc.rect(0, 0, W, 42, 'F');
+
+        // Gold accent stripe
+        setFill(...GOLD);
+        doc.rect(0, 42, W, 1.5, 'F');
+
+        // Title
+        setColor(...WHITE);
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Facial Expression', M, 16);
+        doc.text('Analysis Report', M, 26);
 
         doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
-        Object.entries(counts)
-            .sort((a, b) => b[1] - a[1])
-            .forEach(([emotion, count]) => {
-                const pct = (count / total * 100).toFixed(1);
-                const avgC = (confByEmo[emotion].reduce((a, b) => a + b, 0) / confByEmo[emotion].length * 100).toFixed(1);
-                doc.text(`• ${emotion}: ${count} (${pct}%) | Avg Confidence: ${avgC}%`, margin + 5, yPos);
-                yPos += 6;
-                
-                if (yPos > 270) {
-                    doc.addPage();
-                    yPos = 15;
-                }
-            });
+        doc.setFont('helvetica', 'normal');
+        doc.text('CNN–CatBoost Ensemble Model  |  Real-Time Inference', M, 34);
 
-        // Footer on last page
+        // Date badge top-right
         doc.setFontSize(8);
-        doc.setFont(undefined, 'italic');
-        doc.setTextColor(150);
-        doc.text('Ensemble CNN-CatBoost Facial Expression Recognition System', 105, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
-        doc.setTextColor(0);
+        doc.text(dateStr, W - M, 18, { align: 'right' });
+        doc.text(timeStr, W - M, 25, { align: 'right' });
 
-        // Download
-        doc.save('emotion_analysis_report.pdf');
-        alert('PDF exported successfully!');
+        y = 54;
+
+        // ── Summary metrics row ──
+        const metricBoxes = [
+            { label: 'Total Frames',     value: total },
+            { label: 'Duration',         value: `${duration}s` },
+            { label: 'Avg Confidence',   value: `${avgConf}%` },
+            { label: 'Dominant Emotion', value: dominant[0] },
+            { label: 'Low Conf. Frames', value: lowConfCount },
+        ];
+
+        const bw = CW / metricBoxes.length;
+        metricBoxes.forEach((m, i) => {
+            const bx = M + i * bw;
+            setFill(...PANEL);
+            setDraw(...DIVIDER);
+            doc.setLineWidth(0.3);
+            doc.roundedRect(bx, y, bw - 2, 18, 1.5, 1.5, 'FD');
+            setColor(...MAROON);
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            doc.text(m.label.toUpperCase(), bx + (bw - 2) / 2, y + 5.5, { align: 'center' });
+            setColor(...DARK);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text(String(m.value), bx + (bw - 2) / 2, y + 13, { align: 'center' });
+        });
+        y += 24;
+
+        // ── Emotion breakdown table ──
+        sectionTitle('Emotion Breakdown');
+
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+        // Table header
+        setFill(...MAROON);
+        doc.rect(M, y, CW, 7, 'F');
+        setColor(...WHITE);
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'bold');
+        const cols = [M + 2, M + 30, M + 55, M + 85, M + 118];
+        ['Emotion', 'Count', 'Frequency', 'Avg Confidence', 'Bar'].forEach((h, i) => {
+            doc.text(h, cols[i], y + 4.8);
+        });
+        y += 7;
+
+        sorted.forEach(([emotion, count], idx) => {
+            checkPage(8);
+            const pct    = (count / total * 100).toFixed(1);
+            const avgC   = (confByEmo[emotion].reduce((a, b) => a + b, 0) / confByEmo[emotion].length * 100).toFixed(1);
+            const color  = emotionPalette[emotion] || [120, 120, 120];
+            const barMax = CW - (cols[4] - M) - 4;
+            const barW   = (parseFloat(pct) / 100) * barMax;
+
+            // Alternating row bg
+            if (idx % 2 === 0) {
+                setFill(245, 240, 240);
+                doc.rect(M, y, CW, 7, 'F');
+            }
+
+            // Emotion color dot
+            setFill(...color);
+            doc.circle(cols[0] + 1.5, y + 3.5, 1.5, 'F');
+
+            setColor(...DARK);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.text(emotion, cols[0] + 5, y + 4.8);
+
+            doc.setFont('helvetica', 'normal');
+            setColor(...MID);
+            doc.text(String(count), cols[1], y + 4.8);
+            doc.text(`${pct}%`, cols[2], y + 4.8);
+            doc.text(`${avgC}%`, cols[3], y + 4.8);
+
+            // Mini bar
+            setFill(220, 210, 210);
+            doc.rect(cols[4], y + 1.5, barMax, 4, 'F');
+            setFill(...color);
+            doc.rect(cols[4], y + 1.5, barW, 4, 'F');
+
+            // Row border
+            setDraw(...DIVIDER);
+            doc.setLineWidth(0.2);
+            doc.line(M, y + 7, W - M, y + 7);
+            y += 7;
+        });
+
+        y += 5;
+
+        // ── Inference note ──
+        checkPage(18);
+        setFill(255, 251, 235);
+        setDraw(200, 160, 0);
+        doc.setLineWidth(0.4);
+        doc.roundedRect(M, y, CW, 14, 1.5, 1.5, 'FD');
+        setFill(...GOLD);
+        doc.rect(M, y, 2.5, 14, 'F');
+        setColor(120, 80, 0);
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Important Note on Metrics', M + 5, y + 5);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.text(
+            'Confidence values reflect model softmax output (self-reported certainty), not verified accuracy. Metrics requiring ground-truth labels',
+            M + 5, y + 9
+        );
+        doc.text(
+            '(Accuracy, Precision, Recall, F1, ECE, Confusion Matrix) are not computable from live inference and are not shown in this report.',
+            M + 5, y + 13
+        );
+        y += 19;
+
+        drawPageFooter();
+
+        // ════════════════════════════════════════════
+        // PAGE 2 — CHARTS
+        // ════════════════════════════════════════════
+        newPage();
+        sectionTitle('Visualisations');
+
+        // Helper: compute fitted dimensions preserving aspect ratio
+        function fitChart(canvas, maxW, maxH) {
+            const naturalW = canvas.width  || 800;
+            const naturalH = canvas.height || 400;
+            const ratio    = naturalW / naturalH;
+            let w = maxW;
+            let h = w / ratio;
+            if (h > maxH) { h = maxH; w = h * ratio; }
+            return { w, h };
+        }
+
+        const charts = [
+            { instance: emotionChartInstance,    label: 'Emotion Distribution',   maxW: CW * 0.6, maxH: 80,  center: true  },
+            { instance: eyeContactChartInstance, label: 'Eye Contact Tracking',   maxW: CW,       maxH: 65,  center: true },
+            { instance: smileChartInstance,      label: 'Smile Detection',        maxW: CW,       maxH: 65,  center: true },
+            { instance: microExpChartInstance,   label: 'Micro-Expression Radar', maxW: CW * 0.6, maxH: 80,  center: true  },
+            { instance: timelineChartInstance,   label: 'Expression Frequency',   maxW: CW,       maxH: 65,  center: true },
+        ];
+
+        for (const chart of charts) {
+        if (!chart.instance) continue;
+
+        const { img, w, h } = getChartImageForPDF(chart.instance, chart.maxW, chart.maxH);
+
+        checkPage(h + 18);
+
+        setColor(...MID);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.text(chart.label.toUpperCase(), M, y + 4);
+        setDraw(...DIVIDER);
+        doc.setLineWidth(0.2);
+        doc.line(M, y + 5.5, W - M, y + 5.5);
+        y += 9;
+
+        const xPos = chart.center ? M + (CW - w) / 2 : M;
+
+        setFill(...PANEL);
+        setDraw(...DIVIDER);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(M, y, CW, h + 6, 2, 2, 'FD');
+
+        doc.addImage(img, 'PNG', xPos, y + 3, w, h);
+        y += h + 12;
+        }
+
+        setColor(...DARK);
+        doc.setFont('helvetica', 'normal');
+
+        // ════════════════════════════════════════════
+        // PAGE 3 — DETAILED LOG
+        // ════════════════════════════════════════════
+        newPage();
+        sectionTitle('Session Observation Log');
+
+        // Log table header
+        setFill(...MAROON);
+        doc.rect(M, y, CW, 7, 'F');
+        setColor(...WHITE);
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'bold');
+        const logCols = [M + 2, M + 28, M + 60, M + 90];
+        ['Timestamp', 'Emotion', 'Confidence', 'Notes'].forEach((h, i) => {
+            doc.text(h, logCols[i], y + 4.8);
+        });
+        y += 7;
+
+        let logCurrent = sessionLog.head;
+        let rowIdx = 0;
+        while (logCurrent) {
+            checkPage(7);
+            const { timestamp, label, confidence } = logCurrent.data;
+            const conf = (confidence * 100).toFixed(1);
+            const color = emotionPalette[label] || [120, 120, 120];
+            const note  = confidence < 0.5 ? 'Low confidence' : '';
+
+            if (rowIdx % 2 === 0) {
+                setFill(245, 240, 240);
+                doc.rect(M, y, CW, 6, 'F');
+            }
+
+            setFill(...color);
+            doc.rect(M, y, 1.5, 6, 'F');
+
+            setColor(...MID);
+            doc.setFontSize(7.5);
+            doc.setFont('helvetica', 'normal');
+            doc.text(timestamp,          logCols[0] + 2, y + 4);
+            setColor(...DARK);
+            doc.setFont('helvetica', 'bold');
+            doc.text(label,              logCols[1], y + 4);
+            doc.setFont('helvetica', 'normal');
+            setColor(confidence < 0.5 ? 180 : 60, confidence < 0.5 ? 60 : 130, 60);
+            doc.text(`${conf}%`,         logCols[2], y + 4);
+            setColor(...LIGHT);
+            doc.setFontSize(7);
+            doc.text(note,               logCols[3], y + 4);
+
+            setDraw(...DIVIDER);
+            doc.setLineWidth(0.15);
+            doc.line(M, y + 6, W - M, y + 6);
+
+            y += 6;
+            rowIdx++;
+            logCurrent = logCurrent.next;
+        }
+
+        y += 6;
+        checkPage(20);
+        sectionTitle('Clinical Summary');
+
+        const summaryLines = [
+            `This report was generated on ${dateStr} at ${timeStr} from a live facial expression recognition session.`,
+            `A total of ${total} frames were analysed over approximately ${duration} seconds using the Ensemble CNN–CatBoost model.`,
+            `The predominant emotion observed was ${dominant[0]}, accounting for ${dominantPct}% of all frames.`,
+            `Average model confidence across the session was ${avgConf}%. ${lowConfCount} frame(s) fell below the 50% confidence threshold.`,
+            ``,
+            `Note: All predictions are model inferences on live video frames. This report does not constitute a clinical diagnosis.`,
+            `Results should be interpreted alongside clinical observation and professional judgement.`,
+        ];
+
+        setColor(...DARK);
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'normal');
+        summaryLines.forEach(line => {
+            checkPage(7);
+            if (line === '') { y += 3; return; }
+            const split = doc.splitTextToSize(line, CW);
+            split.forEach(l => {
+                doc.text(l, M, y);
+                y += 5;
+            });
+        });
+
+        // Signature block
+        y += 10;
+        checkPage(28);
+        setDraw(...DIVIDER);
+        doc.setLineWidth(0.3);
+
+        [M, M + CW / 2 + 5].forEach(sx => {
+            doc.line(sx, y + 14, sx + CW / 2 - 10, y + 14);
+            setColor(...LIGHT);
+            doc.setFontSize(7.5);
+            doc.setFont('helvetica', 'normal');
+        });
+        doc.text('Evaluator Signature / Name', M, y + 18);
+        doc.text('Date', M + CW / 2 + 5, y + 18);
+
+        drawPageFooter();
+
+        doc.save(`FER_Report_${now.toISOString().slice(0,10)}.pdf`);
 
     } catch (error) {
         console.error('PDF Export Error:', error);
-        alert('❌ Failed to export PDF. Please check the console.');
+        alert('Failed to export PDF. Check the console for details.');
     }
 }
 

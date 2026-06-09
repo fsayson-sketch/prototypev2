@@ -182,18 +182,19 @@
 
 <!--========== ANALYSIS PAGE (GRAPH & EXPORT DATA) ==========-->
 <section id="analysis-page" class="page-section">
+
     <div class="analytics-container__top">
-        <h3>Session Analytics</h3>
-        <p>Overview of emotions detected in the current sessions</p>
+        <h3>Session Analysis</h3>
+        <p>Overview of emotions detected in the current session</p>
         <div class="analytics-metrics-legend">
             <span><strong>Eye Contact:</strong> eye openness proxy from landmarks</span>
             <span><strong>Smile:</strong> mouth geometry / smile strength</span>
-            <span><strong>Micro:</strong> brow/eye/mouth/jaw motion proxy</span>
+            <span><strong>Micro:</strong> brow / eye / mouth / jaw motion proxy</span>
         </div>
     </div>
 
     <!-- CAPTURE PANEL -->
-     <div class="analytics-container__captures">
+    <div class="analytics-container__captures">
         <div class="captures-header">
             <h3 class="captures-title">Top Captured Frames</h3>
             <div class="captures-controls">
@@ -207,7 +208,6 @@
             </div>
         </div>
         <div class="captures-grid" id="captures-grid">
-            <!-- Skeletal Placeholders (shown when no captures) -->
             <div id="capture-placeholders" class="capture-skeleton-container">
                 <div class="capture-skeleton"></div>
                 <div class="capture-skeleton"></div>
@@ -215,100 +215,121 @@
                 <div class="capture-skeleton"></div>
                 <div class="capture-skeleton"></div>
                 <div class="capture-skeleton"></div>
+                <div class="capture-skeleton"></div>
             </div>
         </div>
-        
-     </div>
+    </div>
 
-    <div class="analytics-container__mid">
-        <!-- Emotion Distribution Card -->
-        <div class="chart-card">
-            <h3>Emotion Distribution</h3>
+    <!-- ROW 1: Emotion Distribution | Eye Contact | Smile -->
+    <div class="analytics-row-1">
+
+        <div class="chart-card chart-card--doughnut">
+            <div class="chart-card__title">Emotion Distribution</div>
             <div class="chart-wrapper">
-                <canvas id="emotionChart" class="chart-content"></canvas>
                 <div id="emotion-skeleton" class="skeleton-loader">
                     <div class="skeleton-circle"></div>
                 </div>
+                <canvas id="emotionChart" class="chart-content"></canvas>
+            </div>
+            <div class="chart-meta">
+                <div class="meta-item">
+                    <span>Session Duration</span>
+                    <strong id="session-duration">--</strong>
+                </div>
             </div>
         </div>
 
-        <!-- Expression Analytics - Eye Contact -->
-        <div class="chart-card">
-            <h3>Eye Contact Tracking</h3>
+        <div class="chart-card chart-card--line">
+            <div class="chart-card__title">Eye Contact Tracking</div>
             <div class="chart-wrapper">
-                <canvas id="eyeContactChart" class="chart-content"></canvas>
                 <div id="eyecontact-skeleton" class="skeleton-loader">
-                    <div class="skeleton-bar" style="width: 100%; height: 60%;"></div>
+                    <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>
                 </div>
+                <canvas id="eyeContactChart" class="chart-content"></canvas>
             </div>
             <div class="chart-meta">
-                <span class="meta-item">Eye Contact Time: <strong id="eye-contact-time">0%</strong></span>
+                <div class="meta-item">
+                    <span>Current Level</span>
+                    <strong id="eye-contact-time">--%</strong>
+                </div>
             </div>
         </div>
 
-        <!-- Expression Analytics - Smile Detection -->
-        <div class="chart-card">
-            <h3>Smile Detection</h3>
+        <div class="chart-card chart-card--bar">
+            <div class="chart-card__title">Smile Detection</div>
             <div class="chart-wrapper">
-                <canvas id="smileChart" class="chart-content"></canvas>
                 <div id="smile-skeleton" class="skeleton-loader">
-                    <div class="skeleton-bar" style="width: 100%; height: 50%;"></div>
+                    <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>
                 </div>
+                <canvas id="smileChart" class="chart-content"></canvas>
             </div>
             <div class="chart-meta">
-                <span class="meta-item">Smile Instances: <strong id="smile-count">0</strong></span>
+                <div class="meta-item">
+                    <span>Total Smiles</span>
+                    <strong id="smile-count">--</strong>
+                </div>
             </div>
         </div>
 
-        <!-- Expression Analytics - Micro Expressions -->
-        <div class="chart-card">
-            <h3>Micro-Expressions</h3>
+    </div>
+
+    <!-- ROW 2: Micro-Expressions | Expression Frequency | Export -->
+    <div class="analytics-row-2">
+
+        <div class="chart-card chart-card--radar">
+            <div class="chart-card__title">Micro-Expressions</div>
             <div class="chart-wrapper">
-                <canvas id="microExpChart" class="chart-content"></canvas>
                 <div id="microexp-skeleton" class="skeleton-loader">
-                    <div class="skeleton-bar" style="width: 100%; height: 45%;"></div>
+                    <div class="skeleton-circle"></div>
                 </div>
+                <canvas id="microExpChart" class="chart-content"></canvas>
             </div>
             <div class="chart-meta">
-                <span class="meta-item">Detected: <strong id="microexp-count">0</strong></span>
+                <div class="meta-item">
+                    <span>Total Detected</span>
+                    <strong id="microexp-count">--</strong>
+                </div>
             </div>
         </div>
 
-        <!-- Expression Analytics - Timeline -->
-        <div class="chart-card">
-            <h3>Expression Timeline</h3>
+        <div class="chart-card chart-card--timeline">
+            <div class="chart-card__title">Expression Frequency</div>
             <div class="chart-wrapper">
-                <canvas id="timelineChart" class="chart-content"></canvas>
                 <div id="timeline-skeleton" class="skeleton-loader">
-                    <div class="skeleton-bar" style="width: 100%; height: 60%;"></div>
+                    <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>
                 </div>
+                <canvas id="timelineChart" class="chart-content"></canvas>
             </div>
             <div class="chart-meta">
-                <span class="meta-item">Duration: <strong id="session-duration">0s</strong></span>
+                <div class="meta-item">
+                    <span>Total Frames</span>
+                    <strong id="dashboard-capture-count">--</strong>
+                </div>
             </div>
         </div>
 
-        <!-- Export Data Card -->
         <div class="export-card">
             <div class="export-header">
-                <h3>Quick Export</h3>
-                <p class="export-subtitle">Download your analysis</p>
+                <h3>Export Data</h3>
+                <p class="export-subtitle">Download your session results</p>
             </div>
             <div class="export-buttons">
                 <button class="export-btn" onclick="exportData('csv')" title="Download raw emotion data as CSV">
                     <span class="export-btn-icon">📄</span>
-                    <span class="export-btn-label">CSV</span>
+                    <span class="export-btn-label">Raw CSV</span>
                 </button>
-                <button class="export-btn" onclick="exportData('psych')" title="Clinical diagnosis log for professionals">
+                <button class="export-btn" onclick="exportData('psych')" title="Clinical log for professionals">
                     <span class="export-btn-icon">📋</span>
-                    <span class="export-btn-label">Clinical</span>
+                    <span class="export-btn-label">Clinical Log</span>
                 </button>
-                <button class="export-btn" onclick="exportData('pdf')" title="Comprehensive report with all charts">
+                <button class="export-btn" onclick="exportData('pdf')" title="Full PDF report with charts">
                     <span class="export-btn-icon">📊</span>
-                    <span class="export-btn-label">PDF</span>
+                    <span class="export-btn-label">PDF Report</span>
                 </button>
             </div>
         </div>
+
     </div>
+
 </section>
 {% endblock %}
