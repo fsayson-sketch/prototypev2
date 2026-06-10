@@ -1,11 +1,7 @@
 # Prototype V2
 
-A streamlined Python application designed to handle efficient workflows and automated tasks.
+A thesis study, Prototype Live inference. tbd
 
-##  Features
-- **Fast Execution:** Optimized backend logic for rapid processing.
-- **Easy Configuration:** Simple dependency management and quick environment setup.
-- **Modular Design:** Built to scale seamlessly for future functional enhancements.
 
 ##  Getting Started
 
@@ -23,7 +19,6 @@ Install all the necessary dependencies using `pip`:
 ```bash
 pip install -r requirements.txt
 ```
-### 2.1 CD to PATH
 
 ### 3. Run the application
 Once the installation is complete, start the app with the following command:
