@@ -4,7 +4,8 @@ A thesis study, Prototype Live inference. tbd
 
 
 ##  Getting Started
-
+PYTHON 3.11 (REQUIRED) 
+USE CONDA IF YOU HAVE HIGHER version. conda env. (tbd)
 Follow these simple steps to get the application up and running on your local machine:
 
 ### 1. Clone the repository
