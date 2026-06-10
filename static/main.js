@@ -176,21 +176,20 @@ function renderEmotionBars(containerId, probs) {
     if (!container) return;
 
     if (!probs) {
-        // Only show "No data" if skeletons are already gone
-        const hasSkeleton = container.querySelector('.comp-skeleton-bars');
+        // Don't overwrite if skeleton is still showing
+        const hasSkeleton = container.querySelector('.emotion-bar-skeleton-list');
         if (!hasSkeleton) {
             container.innerHTML = '<span class="emotion-bars-placeholder">No data</span>';
         }
         return;
     }
 
-    // Clear skeleton bars when real data arrives
-    const skel = container.querySelector('.comp-skeleton-bars');
+    // Remove skeleton on first real data
+    const skel = container.querySelector('.emotion-bar-skeleton-list');
     if (skel) skel.remove();
 
     // Clear metric skeletons on first real render
-    const metricSkels = document.querySelectorAll('.metric-skel');
-    metricSkels.forEach(el => el.remove());
+    document.querySelectorAll('.metric-skel').forEach(el => el.remove());
 
     container.innerHTML = EMOTION_ORDER.map(emotion => {
         const val = probs[emotion] ?? 0;
@@ -561,7 +560,7 @@ function startInference() {
     if (isRunning) return;
     isRunning = true;
 
-    sessionFrames = 0;       // was: ssessionFrames = 0
+    sessionFrames = 0;
     ensLowConf = 0;
     cnnLowConf = 0;
     ensEmotionCounts = {};
@@ -569,9 +568,24 @@ function startInference() {
     ensConfSum = 0;
     cnnConfSum = 0;
 
+    // Re-inject skeletons on restart so bars don't show stale data
+    ['cnn-bars-list', 'ensemble-bars-list'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.querySelector('.emotion-bar-skeleton-list')) {
+            el.innerHTML = `<div class="emotion-bar-skeleton-list">
+                <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:45%"></div></div><div class="ebar-skel-pct"></div></div>
+                <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:30%"></div></div><div class="ebar-skel-pct"></div></div>
+                <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:60%"></div></div><div class="ebar-skel-pct"></div></div>
+                <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:20%"></div></div><div class="ebar-skel-pct"></div></div>
+                <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:75%"></div></div><div class="ebar-skel-pct"></div></div>
+                <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:15%"></div></div><div class="ebar-skel-pct"></div></div>
+                <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:50%"></div></div><div class="ebar-skel-pct"></div></div>
+            </div>`;
+        }
+    });
+
     inferenceTimer = setInterval(sendFrame, CONFIG.inferenceInterval);
     captureTimer   = setInterval(captureFrame, captureIntervalMs);
-
     setTimeout(() => captureFrame(), 3000);
 }
 
@@ -796,7 +810,7 @@ function renderChart() {
                 label: 'Micro-Expression Metrics',
                 data: microExpData,
                 borderColor: '#FFD700',
-                backgroundColor: 'rgba(255, 215, 0, 0.2)',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
                 borderWidth: 2,
                 pointBackgroundColor: '#FFD700',
                 pointBorderColor: '#fff',
@@ -809,14 +823,16 @@ function renderChart() {
             plugins: {
                 legend: { display: false }
             },
-            scales: {
+        scales: {
                 r: {
-                    beginAtZero: true,
+                   beginAtZero: true,
                     max: 100,
-                    ticks: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 9 } },
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    ticks: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 9 }, backdropColor: 'transparent' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    angleLines: { color: 'rgba(255, 255, 255, 0.15)' },
+                    pointLabels: { color: 'rgba(255, 255, 255, 0.9)', font: { size: 11, weight: '500', family: 'Poppins' }, backdropColor: 'rgba(128, 0, 0, 0.75)', backdropPadding: 4, padding: 8 }
+                    }
                 }
-            }
         }
     });
     document.getElementById('microexp-count').textContent = microExpData.reduce((a, b) => a + b, 0).toFixed(0);
