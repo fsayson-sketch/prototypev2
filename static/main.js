@@ -91,12 +91,13 @@ document.addEventListener('click', (e)=> {
 /*========== CONFIG ========== */
 const CONFIG = {
     inferenceInterval   : 250, //  between frames sent to server
+    adaptiveInterval: true,
     minConfidence       : .50,
     streamWidth         : 640,
     streamHeight        : 480,
-    captureWidth        : 320,  //  downscaled before sending
-    captureHeight       : 240,
-    jpegQuality         : .6
+    captureWidth        : 224,  //  downscaled before sending, reduced to 224
+    captureHeight       : 224,
+    jpegQuality         : .5    //from 6 reduced to 5 
 };
 
 /*========== CANVAS / CAMERA ========== */
@@ -222,12 +223,11 @@ async function sendFrame() {
 
     inferenceInFlight = true;
 
-    // Downscale frame to capture resolution before sending
     captureCtx.drawImage(video, 0, 0, CONFIG.captureWidth, CONFIG.captureHeight);
     const base64Frame = captureCanvas.toDataURL('image/jpeg', CONFIG.jpegQuality);
 
     const isCompare = activePage === 'comparison';
-    const t0 = performance.now();   // Timestamp for measuring round-trip inference time
+    const t0 = performance.now();
 
     try {
         const response = await fetch('/predict', {
@@ -243,13 +243,20 @@ async function sendFrame() {
         const result      = await response.json();
 
         handleResult(result, inferenceMs, isCompare);
+
+        // implemented Adaptive interval — slow down if inference is too slow
+        if (CONFIG.adaptiveInterval && inferenceMs > 1000) {
+            clearInterval(inferenceTimer);
+            const newInterval = Math.min(inferenceMs * 0.8, 3000);
+            inferenceTimer = setInterval(sendFrame, newInterval);
+        }
+
     } catch (err) {
         console.error('Inference error:', err);
     } finally {
         inferenceInFlight = false;
     }
 }
-
 /*========== RESULT HANDLERS ========== */
 function handleResult(result, inferenceMs, isCompare) {
     if (isCompare) {

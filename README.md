@@ -1,36 +1,47 @@
-# Prototype V2
+# Ensemble CNN–CatBoost Facial Expression Recognition
 
-A thesis study, Prototype Live inference. tbd
+A thesis prototype for real-time facial expression recognition using an ensemble of ResNet-50 (CNN) and CatBoost, with facial landmark extraction via MediaPipe and Dlib.
 
+## Overview
+- **CNN (ResNet-50):** Processes face crops at 224×224 for visual feature extraction
+- **CatBoost:** Uses 1,610 geometric landmark features (Dlib + MediaPipe)
+- **Meta-Learner (Logistic Regression):** Combines both models' probability outputs for final prediction
+- **Live Inference:** Real-time webcam feed with per-frame emotion classification
 
-##  Getting Started
-PYTHON 3.11 (REQUIRED) 
-USE CONDA IF YOU HAVE HIGHER version conda .env (tbd)
+## Requirements
+- **Python 3.11 is required**
+- If you have a higher Python version, use Conda to create a virtual environment:
+```bash
+conda create -n fer_env python=3.11
+conda activate fer_env
+```
 
-Follow these simple steps to get the application up and running on your local machine:
+## Getting Started
 
 ### 1. Clone the repository
-First, open your terminal and clone the project, then navigate into the project directory:
 ```bash
 git clone https://github.com/fsayson-sketch/prototypev2.git
 cd prototypev2
 ```
 
-### 2. Install the requirements
-Install all the necessary dependencies using `pip`:
+### 2. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 3. Run the application
-Once the installation is complete, start the app with the following command:
 ```bash
 python app.py
 ```
 
-##  Tech Stack
-- **Language:** Python 3, HTML, CSS, JS
-- **Environment Management:** pip
+## Notes
+- GPU is used automatically if available (CUDA), otherwise falls back to CPU
+- This is a prototype — performance may vary depending on hardware
 
-##  License
+## Tech Stack
+- **Language:** Python 3.11, HTML, CSS, JavaScript
+- **Frameworks:** Flask, PyTorch, CatBoost, MediaPipe, Dlib
+- **Environment:** pip / Conda
+
+## License
 This project is open-source and available under the [MIT License](LICENSE).
