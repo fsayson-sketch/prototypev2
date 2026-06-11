@@ -14,3 +14,4 @@ scipy==1.13.1
 # --extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.10.0
 torchvision==0.25.0
+livereload==2.7.1
