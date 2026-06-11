@@ -42,6 +42,14 @@ function switchPage(link) {
     cnnEmotionCounts = {};
     ensConfSum = 0;
     cnnConfSum = 0;
+    dashboardMetrics.count = 0;
+    dashboardMetrics.sum = 0;
+
+    const avgConfEl = document.getElementById('comp-cnn-avg-conf');
+    if (avgConfEl) avgConfEl.textContent = '--';
+
+    const ensAvgConfEl = document.getElementById('comp-ens-avg-conf');
+    if (ensAvgConfEl) ensAvgConfEl.textContent = '--';
 
     // Stop inference and reset button when switching pages
     stopInference();

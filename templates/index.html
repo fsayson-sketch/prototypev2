@@ -4,6 +4,7 @@
 <!--========== DASHBOARD PAGE ==========-->
 <section id="dashboard-page" class="page-section active">
 
+    <div class="dash-content__cam cam-panel">
     <div class="comp-legend-row" id="dash-content__emotion-legend">
         <div class="emotion-legend-inner">
             <span class="legend-item"><span class="legend-dot happy"></span>Happy</span>
@@ -16,16 +17,16 @@
         </div>
     </div>
 
-    <div class="dash-content__cam cam-panel">
-        <div class="emotion-readout">
-            <div class="readout-main" id="emotion-display">--</div>
-            <div class="readout-sub" id="confidence-display">Ready to start</div>
-        </div>
-        <canvas id="video-canvas-dash"></canvas>
-        <div class="comp-cam-btn-overlay">
-            <button class="start-button">Start Logging</button>
-        </div>
+    <div class="emotion-readout">
+        <div class="readout-main" id="emotion-display">--</div>
+        <div class="readout-sub" id="confidence-display">Ready to start</div>
     </div>
+    <canvas id="video-canvas-dash"></canvas>
+    <div class="comp-cam-btn-overlay">
+        <button class="start-button">Start Logging</button>
+    </div>
+
+</div>
 
     <div class="dash-content__session-log">
         <h3 class="session-log-header">Session Log</h3>
@@ -71,26 +72,28 @@
 <!--========== COMPARISON PAGE ==========-->
 <section id="comparison-page" class="page-section">
 
-    <div class="comp-legend-row">
-        <div class="emotion-legend-inner">
-            <span class="legend-item"><span class="legend-dot happy"></span>Happy</span>
-            <span class="legend-item"><span class="legend-dot sad"></span>Sad</span>
-            <span class="legend-item"><span class="legend-dot fear"></span>Fear</span>
-            <span class="legend-item"><span class="legend-dot angry"></span>Angry</span>
-            <span class="legend-item"><span class="legend-dot disgust"></span>Disgust</span>
-            <span class="legend-item"><span class="legend-dot surprise"></span>Surprise</span>
-            <span class="legend-item"><span class="legend-dot neutral"></span>Neutral</span>
-        </div>
-    </div>
-
     <div class="comp-main-row">
 
         <div class="comp-content__cam cam-panel">
+
+            <div class="comp-legend-row" id="comp-content__emotion-legend">
+                <div class="emotion-legend-inner">
+                    <span class="legend-item"><span class="legend-dot happy"></span>Happy</span>
+                    <span class="legend-item"><span class="legend-dot sad"></span>Sad</span>
+                    <span class="legend-item"><span class="legend-dot fear"></span>Fear</span>
+                    <span class="legend-item"><span class="legend-dot angry"></span>Angry</span>
+                    <span class="legend-item"><span class="legend-dot disgust"></span>Disgust</span>
+                    <span class="legend-item"><span class="legend-dot surprise"></span>Surprise</span>
+                    <span class="legend-item"><span class="legend-dot neutral"></span>Neutral</span>
+                </div>
+            </div>
+
             <div class="cam-overlay-badge">Live Feed</div>
             <canvas id="video-canvas-comp"></canvas>
             <div class="comp-cam-btn-overlay">
                 <button class="start-button">Start Comparison</button>
             </div>
+
         </div>
 
         <div class="comp-content__panels">
@@ -277,7 +280,7 @@
             </div>
             <div class="chart-meta">
                 <div class="meta-item">
-                    <span>Total Detected</span>
+                    <span>Expression Intensity</span>
                     <strong id="microexp-count">--</strong>
                 </div>
             </div>
