@@ -527,4 +527,4 @@ if __name__ == "__main__":
     threading.Timer(1.2, lambda: webbrowser.open("http://127.0.0.1:5500")).start()
 
     server = Server(app.wsgi_app)
-    server.serve(host='0.0.0.0', port=5500, debug=False)
+    server.serve(host='127.0.0.1', port=5500, debug=False)
