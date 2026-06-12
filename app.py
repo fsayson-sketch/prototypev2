@@ -119,11 +119,11 @@ class EmotionDetector:
                     self.resnet = models.resnet50(weights=None)
                     num_features = self.resnet.fc.in_features
                     self.resnet.fc = torch.nn.Sequential(
-                        torch.nn.Linear(num_features, 512),
-                        torch.nn.BatchNorm1d(512),
-                        torch.nn.Dropout(0.5),
+                        torch.nn.Linear(num_features, 256),
+                        torch.nn.BatchNorm1d(256),
                         torch.nn.ReLU(inplace=True),
-                        torch.nn.Linear(512, num_classes)
+                        torch.nn.Dropout(0.4),
+                        torch.nn.Linear(256, num_classes)
                     )
 
                 def forward(self, x):
@@ -173,18 +173,18 @@ class EmotionDetector:
             raise
 
         # ── 4. Temperature Scaling ───────────────────────────
-        temp_path = os.path.join(self.model_dir, 'optimal_temperature.json')
+        temp_path = os.path.join(self.model_dir, 'optimal_temperatures.json')
         if os.path.exists(temp_path):
             with open(temp_path, 'r') as f:
                 temps = json.load(f)
-            self.T_cnn      = float(temps.get("T_cnn",      1.0))
-            self.T_catboost = float(temps.get("T_catboost", 1.0))
+            self.T_cnn      = float(temps.get("cnn_temperature",      1.0))
+            self.T_catboost = float(temps.get("catboost_temperature", 1.0))
             print(f"✅ Temperature scaling loaded - "
                   f"T_cnn={self.T_cnn:.4f}, T_catboost={self.T_catboost:.4f}")
         else:
             self.T_cnn      = 1.0
             self.T_catboost = 1.0
-            print("ℹ️ No optimal_temperature.json found - "
+            print("ℹ️ No optimal_temperatures.json found - "
                   "temperature scaling disabled (T=1.0 no-op).")
 
         # ── 5. Distance Estimation ────────────────────────────
@@ -523,8 +523,7 @@ def predict():
 
 # ─────────────── Entry point ───────────────
 if __name__ == "__main__":
-    from livereload import Server
-    threading.Timer(1.2, lambda: webbrowser.open("http://127.0.0.1:5500")).start()
+    port = int(os.environ.get("PORT", 5000))
+    threading.Timer(1.2, lambda: webbrowser.open(f"http://127.0.0.1:{port}")).start()
 
-    server = Server(app.wsgi_app)
-    server.serve(host='127.0.0.1', port=5500, debug=False)
+    app.run(host='127.0.0.1', port=port, debug=False)
