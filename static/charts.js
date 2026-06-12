@@ -76,19 +76,20 @@ function renderChart() {
                         const c = emotionColors[seg.label] || '#ccc';
                         return `<div class="gantt-segment" style="width:${w}%;background:${c};"
                             title="${seg.label} — ${seg.time} (${seg.end - seg.start + 1} frames)">
-                            ${parseFloat(w) > 8 ? `<span class="gantt-label">${seg.label}</span>` : ''}
+                            ${parseFloat(w) > 8 ? `<span class="gantt-label" style="color:#ffffff ;text-shadow:none;">${seg.label}</span>` : ''}
                         </div>`;
                     }).join('')}
                 </div>
                 <div class="gantt-legend">
                     ${segments.slice(-5).reverse().map(seg => `
-                        <span class="gantt-legend-item">
+                        <span class="gantt-legend-item" style="color:#ffffff ;">
                             <span class="gantt-dot" style="background:${emotionColors[seg.label]||'#ccc'}"></span>
-                            ${seg.label} <small>${seg.time}</small>
-                        </span>`).join('')}
+                            ${seg.label} <small style="color:#ffffff ;">${seg.time}</small>
+                        </span>
+                    `).join('')}
                 </div>
             </div>`;
-    }
+}
 
     // ── 3. Arousal Trend ─────────────────────────────────
     const aData   = arousalHistory.length > 0 ? arousalHistory : entries.map(e => AROUSAL_MAP[e.label] ?? 0.5);
@@ -260,84 +261,4 @@ function renderChart() {
 
     if (activePage === 'analysis' && isRunning)
         setTimeout(() => requestAnimationFrame(renderChart), 500);
-}
-
-// ─── ADD TO chart.js ──────────────────────────────────────
-// Add this as a new chart section inside renderChart(),
-// after the Emotional Stability block (section 7), before the final setTimeout
-
-    // ── 8. Distance Over Time ─────────────────────────────
-    if (distanceHistory.length > 0) {
-        const dLabels = distanceHistory.map((_, i) => `#${i + 1}`);
-        const dData   = distanceHistory.map(d => d.cm);
-        const dColors = distanceHistory.map(d => d.zone?.color || '#ccc');
-
-        const distCanvasEl = document.getElementById('distanceChart');
-        if (distCanvasEl) {
-            if (window.distanceChartInstance) {
-                window.distanceChartInstance.data.labels           = dLabels;
-                window.distanceChartInstance.data.datasets[0].data = dData;
-                window.distanceChartInstance.data.datasets[0].pointBackgroundColor = dColors;
-                window.distanceChartInstance.update('none');
-            } else {
-                window.distanceChartInstance = new Chart(distCanvasEl.getContext('2d'), {
-                    type: 'line',
-                    data: {
-                        labels  : dLabels,
-                        datasets: [{
-                            label               : 'Distance (cm)',
-                            data                : dData,
-                            borderColor         : '#55AAFF',
-                            backgroundColor     : 'rgba(85,170,255,0.1)',
-                            borderWidth         : 2,
-                            fill                : true,
-                            tension             : 0.4,
-                            pointRadius         : 3,
-                            pointBackgroundColor: dColors
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false },
-                            annotation: {
-                                annotations: {
-                                    optimal: {
-                                        type      : 'box',
-                                        yMin      : 35, yMax: 80,
-                                        backgroundColor: 'rgba(57,255,180,0.06)',
-                                        borderColor    : 'rgba(57,255,180,0.25)',
-                                        borderWidth    : 1,
-                                        label: { display: true, content: 'Optimal Zone',
-                                                 color: 'rgba(57,255,180,0.6)', font: { size: 9 } }
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: { beginAtZero: false, ...AXIS_STYLE,
-                                 ticks: { ...AXIS_STYLE.ticks, callback: v => `${v}cm` } },
-                            x: { ...AXIS_STYLE, ticks: { ...AXIS_STYLE.ticks, maxTicksLimit: 8 } }
-                        }
-                    }
-                });
-            }
-
-            // Update meta below the chart
-            const last = distanceHistory[distanceHistory.length - 1];
-            const avg  = (distanceHistory.reduce((s, d) => s + d.cm, 0) / distanceHistory.length).toFixed(1);
-            setTextContent('distance-current', last ? `${last.cm} cm  (${last.zone?.label})` : '--');
-            setTextContent('distance-avg',     `${avg} cm`);
-        }
-
-        // toggle skeleton
-        document.getElementById('distance-skeleton')?.classList.remove('visible');
-    } else {
-        document.getElementById('distance-skeleton')?.classList.add('visible');
-        setTextContent('distance-current', '--');
-        setTextContent('distance-avg',     '--');
-    }
-
-// ─── Also add 'distance-skeleton' to toggleSkeletonLoaders() ────────────────
-// Find this line in chart.js:
-//   ['emotion-skeleton','gantt-skeleton', ... ,'stability-skeleton']
-// and add 'distance-skeleton' to the array.
+}   

@@ -399,8 +399,8 @@ video{position:absolute;display:block;opacity:0;width:0;height:0;}
 /* DISTANCE BADGE — on camera feed */
 .distance-badge {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 95%;
+    left: 20%;
     transform: translate(-50%, -50%);
     height: fit-content;
     padding: .4em 1em;
