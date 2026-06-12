@@ -5,28 +5,31 @@
 <section id="dashboard-page" class="page-section active">
 
     <div class="dash-content__cam cam-panel">
-    <div class="comp-legend-row" id="dash-content__emotion-legend">
-        <div class="emotion-legend-inner">
-            <span class="legend-item"><span class="legend-dot happy"></span>Happy</span>
-            <span class="legend-item"><span class="legend-dot sad"></span>Sad</span>
-            <span class="legend-item"><span class="legend-dot fear"></span>Fear</span>
-            <span class="legend-item"><span class="legend-dot angry"></span>Angry</span>
-            <span class="legend-item"><span class="legend-dot disgust"></span>Disgust</span>
-            <span class="legend-item"><span class="legend-dot surprise"></span>Surprise</span>
-            <span class="legend-item"><span class="legend-dot neutral"></span>Neutral</span>
+        <div class="comp-legend-row" id="dash-content__emotion-legend">
+            <div class="emotion-legend-inner">
+                <span class="legend-item"><span class="legend-dot happy"></span>Happy</span>
+                <span class="legend-item"><span class="legend-dot sad"></span>Sad</span>
+                <span class="legend-item"><span class="legend-dot fear"></span>Fear</span>
+                <span class="legend-item"><span class="legend-dot angry"></span>Angry</span>
+                <span class="legend-item"><span class="legend-dot disgust"></span>Disgust</span>
+                <span class="legend-item"><span class="legend-dot surprise"></span>Surprise</span>
+                <span class="legend-item"><span class="legend-dot neutral"></span>Neutral</span>
+            </div>
+        </div>
+
+        <div class="emotion-readout">
+            <div class="readout-main" id="emotion-display">--</div>
+            <div class="readout-sub" id="confidence-display">Ready to start</div>
+        </div>
+
+        <!-- ★ DISTANCE BADGE -->
+        <div id="distance-badge" class="distance-badge">-- cm</div>
+
+        <canvas id="video-canvas-dash"></canvas>
+        <div class="comp-cam-btn-overlay">
+            <button class="start-button">Start Logging</button>
         </div>
     </div>
-
-    <div class="emotion-readout">
-        <div class="readout-main" id="emotion-display">--</div>
-        <div class="readout-sub" id="confidence-display">Ready to start</div>
-    </div>
-    <canvas id="video-canvas-dash"></canvas>
-    <div class="comp-cam-btn-overlay">
-        <button class="start-button">Start Logging</button>
-    </div>
-
-</div>
 
     <div class="dash-content__session-log">
         <h3 class="session-log-header">Session Log</h3>
@@ -89,6 +92,10 @@
             </div>
 
             <div class="cam-overlay-badge">Live Feed</div>
+
+            <!-- ★ DISTANCE BADGE (comp page — separate id) -->
+            <div id="distance-badge-comp" class="distance-badge">-- cm</div>
+
             <canvas id="video-canvas-comp"></canvas>
             <div class="comp-cam-btn-overlay">
                 <button class="start-button">Start Comparison</button>
@@ -172,18 +179,18 @@
 
 </section>
 
-        
-
-<!--========== ANALYSIS PAGE (GRAPH & EXPORT DATA) ==========-->
+<!--========== ANALYSIS PAGE ==========-->
 <section id="analysis-page" class="page-section">
 
     <div class="analytics-container__top">
         <h3>Session Analysis</h3>
-        <p>Overview of emotions detected in the current session</p>
+        <p>Real-time facial affect monitoring — clinical support tool</p>
         <div class="analytics-metrics-legend">
-            <span><strong>Eye Contact:</strong> eye openness proxy from landmarks</span>
-            <span><strong>Smile:</strong> mouth geometry / smile strength</span>
-            <span><strong>Micro:</strong> brow / eye / mouth / jaw motion proxy</span>
+            <span><strong>EAR:</strong> Eye Aspect Ratio via MediaPipe landmarks</span>
+            <span><strong>AU:</strong> Action Unit proxies (FACS-based)</span>
+            <span><strong>Arousal:</strong> Valence-arousal mapping from predicted emotion</span>
+            <!-- ★ NEW -->
+            <span><strong>Distance:</strong> Pinhole model via bbox width — calibrates on first frame</span>
         </div>
     </div>
 
@@ -214,7 +221,7 @@
         </div>
     </div>
 
-    <!-- ROW 1: Emotion Distribution | Eye Contact | Smile -->
+    <!-- ROW 1: 4 cards -->
     <div class="analytics-row-1">
 
         <div class="chart-card chart-card--doughnut">
@@ -233,71 +240,34 @@
             </div>
         </div>
 
-        <div class="chart-card chart-card--line">
-            <div class="chart-card__title">Eye Contact Tracking</div>
+        <div class="chart-card chart-card--radar">
+            <div class="chart-card__title">Facial Action Units (AU)</div>
             <div class="chart-wrapper">
-                <div id="eyecontact-skeleton" class="skeleton-loader">
-                    <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>
+                <div id="au-skeleton" class="skeleton-loader">
+                    <div class="skeleton-circle"></div>
                 </div>
-                <canvas id="eyeContactChart" class="chart-content"></canvas>
+                <canvas id="auChart" class="chart-content"></canvas>
             </div>
             <div class="chart-meta">
                 <div class="meta-item">
-                    <span>Current Level</span>
-                    <strong id="eye-contact-time">--%</strong>
+                    <span>Genuine Smile</span>
+                    <strong id="genuine-smile">--</strong>
                 </div>
             </div>
         </div>
 
         <div class="chart-card chart-card--bar">
-            <div class="chart-card__title">Smile Detection</div>
+            <div class="chart-card__title">Negative Affect Load</div>
             <div class="chart-wrapper">
-                <div id="smile-skeleton" class="skeleton-loader">
+                <div id="negaffect-skeleton" class="skeleton-loader">
                     <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>
                 </div>
-                <canvas id="smileChart" class="chart-content"></canvas>
+                <canvas id="negAffectChart" class="chart-content"></canvas>
             </div>
             <div class="chart-meta">
                 <div class="meta-item">
-                    <span>Total Smiles</span>
-                    <strong id="smile-count">--</strong>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- ROW 2: Micro-Expressions | Expression Frequency | Export -->
-    <div class="analytics-row-2">
-
-        <div class="chart-card chart-card--radar">
-            <div class="chart-card__title">Micro-Expressions</div>
-            <div class="chart-wrapper">
-                <div id="microexp-skeleton" class="skeleton-loader">
-                    <div class="skeleton-circle"></div>
-                </div>
-                <canvas id="microExpChart" class="chart-content"></canvas>
-            </div>
-            <div class="chart-meta">
-                <div class="meta-item">
-                    <span>Expression Intensity</span>
-                    <strong id="microexp-count">--</strong>
-                </div>
-            </div>
-        </div>
-
-        <div class="chart-card chart-card--timeline">
-            <div class="chart-card__title">Expression Frequency</div>
-            <div class="chart-wrapper">
-                <div id="timeline-skeleton" class="skeleton-loader">
-                    <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>
-                </div>
-                <canvas id="timelineChart" class="chart-content"></canvas>
-            </div>
-            <div class="chart-meta">
-                <div class="meta-item">
-                    <span>Total Frames</span>
-                    <strong id="dashboard-capture-count">--</strong>
+                    <span>Negative Affect %</span>
+                    <strong id="neg-affect-pct">--</strong>
                 </div>
             </div>
         </div>
@@ -308,18 +278,96 @@
                 <p class="export-subtitle">Download your session results</p>
             </div>
             <div class="export-buttons">
-                <button class="export-btn" onclick="exportData('csv')" title="Download raw emotion data as CSV">
+                <button class="export-btn" onclick="exportData('csv')">
                     <span class="export-btn-icon">📄</span>
                     <span class="export-btn-label">Raw CSV</span>
                 </button>
-                <button class="export-btn" onclick="exportData('psych')" title="Clinical log for professionals">
+                <button class="export-btn" onclick="exportData('psych')">
                     <span class="export-btn-icon">📋</span>
                     <span class="export-btn-label">Clinical Log</span>
                 </button>
-                <button class="export-btn" onclick="exportData('pdf')" title="Full PDF report with charts">
+                <button class="export-btn" onclick="exportData('pdf')">
                     <span class="export-btn-icon">📊</span>
                     <span class="export-btn-label">PDF Report</span>
                 </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ROW 2: 2 cards -->
+    <div class="analytics-row-2">
+
+        <div class="chart-card chart-card--line">
+            <div class="chart-card__title">Emotional Stability</div>
+            <div class="chart-wrapper">
+                <div id="stability-skeleton" class="skeleton-loader">
+                    <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>
+                </div>
+                <canvas id="stabilityChart" class="chart-content"></canvas>
+            </div>
+            <div class="chart-meta">
+                <div class="meta-item">
+                    <span>Stability Index</span>
+                    <strong id="stability-index">--</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card chart-card--timeline">
+            <div class="chart-card__title">Emotion Timeline</div>
+            <div class="chart-wrapper">
+                <div id="gantt-skeleton" class="skeleton-loader">
+                    <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>
+                </div>
+                <div id="ganttChart" class="chart-content gantt-chart-container"></div>
+            </div>
+            <div class="chart-meta">
+                <div class="meta-item">
+                    <span>Emotion Shifts</span>
+                    <strong id="emotion-shifts">--</strong>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ROW 3: 2 cards -->
+    <div class="analytics-row-3">
+
+        <div class="chart-card chart-card--line">
+            <div class="chart-card__title">Eye Openness + Blinks (EAR)</div>
+            <div class="chart-wrapper">
+                <div id="ear-skeleton" class="skeleton-loader">
+                    <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>
+                </div>
+                <canvas id="earChart" class="chart-content"></canvas>
+            </div>
+            <div class="chart-meta">
+                <div class="meta-item">
+                    <span>Blink Count</span>
+                    <strong id="blink-count">--</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Avg EAR</span>
+                    <strong id="avg-ear">--</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card chart-card--bar">
+            <div class="chart-card__title">Arousal Level</div>
+            <div class="chart-wrapper">
+                <div id="arousal-skeleton" class="skeleton-loader">
+                    <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>
+                </div>
+                <canvas id="arousalChart" class="chart-content"></canvas>
+            </div>
+            <div class="chart-meta">
+                <div class="meta-item">
+                    <span>Current Arousal</span>
+                    <strong id="arousal-level">--</strong>
+                </div>
             </div>
         </div>
 
