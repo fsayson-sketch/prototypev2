@@ -187,33 +187,64 @@ function renderChart() {
 
     // ── 6. Facial Action Units Radar ─────────────────────
     if (auHistory.length > 0) {
-        const auKeys   = ['AU1','AU2','AU4','AU6','AU12','AU17','AU25'];
-        const auLabels = ['AU1 Inner Brow','AU2 Outer Brow','AU4 Brow Lower',
-                          'AU6 Cheek Raise','AU12 Lip Corner','AU17 Chin Raise','AU25 Lips Part'];
-        const auData   = auKeys.map(k => parseFloat(
-            (auHistory.reduce((s,f) => s+(f[k]||0), 0) / auHistory.length).toFixed(1)
-        ));
-        const latest = auHistory[auHistory.length-1];
-        setTextContent('genuine-smile', (latest.AU6>25 && latest.AU12>35) ? '✓ Duchenne' : '✗ Non-Duchenne');
+        const auLabels = [
+            'F10 Chin-to-Lower-Lip',
+            'F11 Brow-to-Eye-Center',
+            'F12 Upper Lip Raise'
+        ];
+        const auData = [
+            parseFloat((auHistory.reduce((s, f) => s + (f['AU17'] || 0), 0) / auHistory.length / 100).toFixed(3)),
+            parseFloat((auHistory.reduce((s, f) => s + (((f['AU1'] || 0) + (f['AU2'] || 0)) / 2), 0) / auHistory.length / 100).toFixed(3)),
+            parseFloat((auHistory.reduce((s, f) => s + (f['AU25'] || 0), 0) / auHistory.length / 100).toFixed(3)),
+        ];
+        const latest = auHistory[auHistory.length - 1];
+        const f10 = (latest['AU17'] || 0) / 100;
+        const f11 = ((latest['AU1'] || 0) + (latest['AU2'] || 0)) / 2 / 100;
+        const f12 = (latest['AU25'] || 0) / 100;
+
+        const insight = f12 > 0.06 ? 'Disgust indicator (raised upper lip)'
+                    : f11 > 0.08 ? 'Fear/Surprise (brows raised)'
+                    : f11 < 0.03 ? 'Anger indicator (brows pushed down)'
+                    : f10 < 0.04 ? 'Sad indicator (compressed chin-lip gap)'
+                    : 'Neutral expression';
+        setTextContent('genuine-smile', insight);
 
         auChartInstance = updateOrCreate(
             auChartInstance,
             () => new Chart(document.getElementById('auChart').getContext('2d'), {
                 type: 'radar',
                 data: { labels: auLabels, datasets: [{
-                    label:'AU Score', data:auData, borderColor:'#FFD700',
-                    backgroundColor:'rgba(255,215,0,0.15)', borderWidth:2,
-                    pointBackgroundColor:'#FFD700', pointBorderColor:'#fff', pointRadius:4
+                    label: 'Geometric Feature Score',
+                    data: auData,
+                    borderColor: '#FFD700',
+                    backgroundColor: 'rgba(255,215,0,0.15)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#FFD700',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4
                 }]},
-                options: { responsive:true, maintainAspectRatio:false,
-                    plugins: { legend: { display:false } },
+                options: { responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
                     scales: { r: {
-                        beginAtZero:true, max:100,
-                        ticks      : { color:'rgba(255,255,255,0.7)', font:{size:9}, backdropColor:'transparent' },
-                        grid       : { color:'rgba(255,255,255,0.1)' },
-                        angleLines : { color:'rgba(255,255,255,0.15)' },
-                        pointLabels: { color:'rgba(255,255,255,0.9)', font:{size:9,weight:'500',family:'Poppins'},
-                                       backdropColor:'rgba(128,0,0,0.75)', backdropPadding:3, padding:6 }
+                        beginAtZero: true,
+                        max: 1,
+                        min: 0,
+                        ticks: {
+                            count: 5,
+                            color: 'rgba(255,255,255,0.7)',
+                            font: { size: 8 },
+                            backdropColor: 'transparent',
+                            callback: v => v.toFixed(1)
+                        },
+                        grid       : { color: 'rgba(255,255,255,0.1)' },
+                        angleLines : { color: 'rgba(255,255,255,0.15)' },
+                        pointLabels: {
+                            color: 'rgba(255,255,255,0.9)',
+                            font: { size: 10, weight: '500', family: 'Poppins' },
+                            backdropColor: 'rgba(128,0,0,0.75)',
+                            backdropPadding: 4,
+                            padding: 10
+                        }
                     }}
                 }
             }),
