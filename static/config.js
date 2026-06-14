@@ -32,6 +32,15 @@ const AROUSAL_MAP = {
     Sad     : 0.35,
     Neutral : 0.20
 };
+const VALENCE_MAP = {
+    Happy   :  0.85,
+    Surprise:  0.30,
+    Neutral :  0.00,
+    Sad     : -0.60,
+    Fear    : -0.70,
+    Angry   : -0.80,
+    Disgust : -0.75
+};
 
 const DISTANCE_ZONES = {
     tooClose : { max: 35,       label: 'Too Close', color: '#ff5555' },

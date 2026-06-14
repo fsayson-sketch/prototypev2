@@ -32,9 +32,17 @@ function exportCSV() {
 function snapshotCanvas(canvasEl, maxW, maxH) {
     const chart = Object.values(Chart.instances).find(c => c.canvas === canvasEl);
 
-    // Override colors for export
     if (chart) {
         chart.options.plugins.legend.labels.color = '#1e1e1e';
+        // ← add: override generateLabels to force dark color
+        const origGenerateLabels = chart.options.plugins.legend.labels.generateLabels;
+        if (origGenerateLabels) {
+            chart.options.plugins.legend.labels.generateLabels = (c) => {
+                const labels = origGenerateLabels(c);
+                labels.forEach(l => { l.fontColor = '#1e1e1e'; l.color = '#1e1e1e'; });
+                return labels;
+            };
+        }
         if (chart.options.plugins.datalabels) {
             chart.options.plugins.datalabels.color = '#1e1e1e';
         }
@@ -42,7 +50,7 @@ function snapshotCanvas(canvasEl, maxW, maxH) {
             if (scale.ticks) scale.ticks.color = '#1e1e1e';
             if (scale.title) scale.title.color = '#1e1e1e';
         });
-        chart.update('none'); // re-render without animation
+        chart.update('none');
     }
 
     const offscreen = document.createElement('canvas');
@@ -54,9 +62,12 @@ function snapshotCanvas(canvasEl, maxW, maxH) {
     ctx.drawImage(canvasEl, 0, 0);
     const img = offscreen.toDataURL('image/png', 1.0);
 
-    // Restore original colors
     if (chart) {
         chart.options.plugins.legend.labels.color = '#ffffff';
+        // ← restore original generateLabels
+        if (chart.options.plugins.legend.labels.generateLabels?._original) {
+            chart.options.plugins.legend.labels.generateLabels = chart.options.plugins.legend.labels.generateLabels._original;
+        }
         if (chart.options.plugins.datalabels) {
             chart.options.plugins.datalabels.color = '#ffffff';
         }
@@ -440,15 +451,30 @@ async function exportPDF() {
             current = current.next;
         }
         const total       = sessionLog.size;
+        const distTotal   = Object.values(counts).reduce((a, b) => a + b, 0);
         const avgConf     = (totalConf / total * 100).toFixed(1);
         const dominant    = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
-        const dominantPct = (dominant[1] / total * 100).toFixed(1);
+        const dominantPct = (dominant[1] / distTotal * 100).toFixed(1);
         const lowConfCount = (() => {
             let n = sessionLog.head, cnt = 0;
             while (n) { if (n.data.confidence < 0.5) cnt++; n = n.next; }
             return cnt;
         })();
         const duration = (total * 0.25).toFixed(0);
+
+        // ── Read DOM values for gauges ──
+        const arousalPct   = document.getElementById('arousal-value')?.textContent  || '--';
+        const valencePct   = document.getElementById('valence-value')?.textContent  || '--';
+        const arousalLabel = document.getElementById('arousal-level')?.textContent  || '--';
+        const valenceLabel = document.getElementById('valence-level')?.textContent  || '--';
+        const avState      = document.getElementById('av-state-badge')?.textContent || '--';
+        const negAngry     = document.getElementById('neg-affect-anger')?.textContent   || '--';
+        const negSad       = document.getElementById('neg-affect-sad')?.textContent     || '--';
+        const negFear      = document.getElementById('neg-affect-fear')?.textContent    || '--';
+        const negDisgust   = document.getElementById('neg-affect-disgust')?.textContent || '--';
+        const negTotalTxt  = document.getElementById('neg-affect-total')?.textContent   || '--';
+        const stabilityIndex = document.getElementById('stability-index')?.textContent || '--';
+        const stabilityState = document.getElementById('stability-state')?.textContent  || '--';
 
         const now     = new Date();
         const dateStr = now.toLocaleDateString([], { year: 'numeric', month: 'long', day: 'numeric' });
@@ -592,7 +618,7 @@ async function exportPDF() {
 
         sorted.forEach(([emotion, count], idx) => {
             checkPage(8);
-            const pct   = (count / total * 100).toFixed(1);
+            const pct   = (count / distTotal * 100).toFixed(1);
             const avgC  = (confByEmo[emotion].reduce((a, b) => a + b, 0) / confByEmo[emotion].length * 100).toFixed(1);
             const color = emotionPalette[emotion] || [120, 120, 120];
             const barMax = CW - (cols[4] - M) - 4;
@@ -630,19 +656,93 @@ async function exportPDF() {
         drawPageFooter();
 
         // ════════════════════════════════════════════
-        // PAGE 2 — CHARTS ONLY
+        // PAGE 2 — AROUSAL & VALENCE + NEGATIVE AFFECT (text summaries)
+        // ════════════════════════════════════════════
+        newPage();
+        sectionTitle('Arousal & Valence');
+
+        // Two-column info boxes
+        const halfW = (CW - 4) / 2;
+
+        // Arousal box
+        setFill(...PANEL); setDraw(...DIVIDER);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(M, y, halfW, 28, 1.5, 1.5, 'FD');
+        setFill(...MAROON); doc.rect(M, y, 2.5, 28, 'F');
+        setColor(...MAROON); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+        doc.text('AROUSAL', M + 6, y + 6);
+        setColor(...DARK); doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+        doc.text(arousalPct, M + 6, y + 17);
+        setColor(...MID); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+        doc.text(arousalLabel, M + 6, y + 24);
+
+        // Valence box
+        const vx = M + halfW + 4;
+        setFill(...PANEL); setDraw(...DIVIDER);
+        doc.roundedRect(vx, y, halfW, 28, 1.5, 1.5, 'FD');
+        setFill(...MAROON); doc.rect(vx, y, 2.5, 28, 'F');
+        setColor(...MAROON); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+        doc.text('VALENCE', vx + 6, y + 6);
+        setColor(...DARK); doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+        doc.text(valencePct, vx + 6, y + 17);
+        setColor(...MID); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+        doc.text(valenceLabel, vx + 6, y + 24);
+
+        y += 33;
+
+        // State badge row
+        setFill(...PANEL); setDraw(...DIVIDER);
+        doc.roundedRect(M, y, CW, 12, 1.5, 1.5, 'FD');
+        setColor(...MAROON); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+        doc.text('CURRENT AROUSAL STATE', M + 4, y + 5);
+        setColor(...DARK); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.text(avState, M + 4, y + 10);
+        y += 18;
+
+        // ── Negative Affect Load ──
+        sectionTitle('Negative Affect Load');
+
+        const negItems = [
+            { label: 'Angry',   value: negAngry,   color: emotionPalette.Angry },
+            { label: 'Sad',     value: negSad,     color: emotionPalette.Sad },
+            { label: 'Fear',    value: negFear,     color: emotionPalette.Fear },
+            { label: 'Disgust', value: negDisgust,  color: emotionPalette.Disgust },
+        ];
+
+        const negBw = CW / 4;
+        negItems.forEach((item, i) => {
+            const bx = M + i * negBw;
+            setFill(...PANEL); setDraw(...DIVIDER);
+            doc.setLineWidth(0.3);
+            doc.roundedRect(bx, y, negBw - 2, 22, 1.5, 1.5, 'FD');
+            setFill(...item.color); doc.rect(bx, y, negBw - 2, 3, 'F');
+            setColor(...MAROON); doc.setFontSize(7); doc.setFont('helvetica', 'normal');
+            doc.text(item.label.toUpperCase(), bx + (negBw - 2) / 2, y + 9, { align: 'center' });
+            setColor(...DARK); doc.setFontSize(13); doc.setFont('helvetica', 'bold');
+            doc.text(item.value, bx + (negBw - 2) / 2, y + 17, { align: 'center' });
+        });
+        y += 27;
+
+        // Total negative affect bar
+        setFill(...PANEL); setDraw(...DIVIDER);
+        doc.roundedRect(M, y, CW, 12, 1.5, 1.5, 'FD');
+        setColor(...MAROON); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+        doc.text('TOTAL NEGATIVE AFFECT', M + 4, y + 5);
+        setColor(...DARK); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.text(negTotalTxt, W - M - 4, y + 9, { align: 'right' });
+        y += 18;
+
+        // ════════════════════════════════════════════
+        // PAGE 3 — CHARTS
         // ════════════════════════════════════════════
         newPage();
         sectionTitle('Visualisations');
 
         const chartDefs = [
             { id: 'emotionChart',   label: 'Emotion Distribution',       maxW: CW * 0.6, maxH: 80 },
-            { id: 'arousalChart',   label: 'Arousal Level',               maxW: CW,       maxH: 65 },
-            { id: 'negAffectChart', label: 'Negative Affect Load',        maxW: CW,       maxH: 65 },
             { id: 'earChart',       label: 'Eye Openness + Blinks (EAR)', maxW: CW,       maxH: 65 },
             { id: 'auChart',        label: 'Facial Action Units (AU)',     maxW: CW * 0.6, maxH: 80 },
             { id: 'stabilityChart', label: 'Emotional Stability',         maxW: CW,       maxH: 65 },
-            { id: 'distanceChart',  label: 'Face Distance Over Time',     maxW: CW,       maxH: 65 },
         ];
 
         for (const def of chartDefs) {
@@ -663,26 +763,39 @@ async function exportPDF() {
             doc.roundedRect(M, y, CW, h + 6, 2, 2, 'FD');
             doc.addImage(img, 'PNG', M + (CW - w) / 2, y + 3, w, h);
             y += h + 12;
-        }
 
-        const ganttEl = document.getElementById('ganttChart');
+            // ← add stability meta row after stabilityChart
+            if (def.id === 'stabilityChart') {
+                checkPage(14);
+                setFill(...PANEL); setDraw(...DIVIDER);
+                doc.setLineWidth(0.3);
+                doc.roundedRect(M, y, CW, 12, 1.5, 1.5, 'FD');
+                setColor(...MAROON); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+                doc.text('STABILITY INDEX', M + 4, y + 5);
+                setColor(...DARK); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+                doc.text(stabilityIndex, M + 50, y + 9);
+                setColor(...MAROON); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+                doc.text('STATE', M + CW / 2, y + 5);
+                setColor(...DARK); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+                doc.text(stabilityState, M + CW / 2 + 20, y + 9);
+                y += 18;
+            }         // ← closes if
+        } 
+
+        // ── Gantt timeline ──
+        const ganttEl = document.getElementById('ganttTrack')?.closest('.chart-wrapper') 
+                     || document.getElementById('ganttTrack');
         if (ganttEl && ganttEl.innerHTML.trim() !== '') {
-
-            // ── Force PDF-safe colors before capture ──
-            const blocks = ganttEl.querySelectorAll('[class*="gantt"], div[style]');
             const originalStyles = [];
             ganttEl.querySelectorAll('*').forEach(el => {
                 const computed = window.getComputedStyle(el);
                 originalStyles.push({ el, color: el.style.color });
-                // If text color is white or near-white, override to dark
-                const c = computed.color; // e.g. "rgb(255,255,255)"
+                const c = computed.color;
                 if (c) {
                     const match = c.match(/\d+/g);
                     if (match) {
                         const [r, g, b] = match.map(Number);
-                        if (r > 200 && g > 200 && b > 200) {
-                            el.style.color = '#1e1e1e';
-                        }
+                        if (r > 200 && g > 200 && b > 200) el.style.color = '#1e1e1e';
                     }
                 }
             });
@@ -696,13 +809,12 @@ async function exportPDF() {
                 windowHeight: ganttEl.scrollHeight,
             });
 
-            // ── Restore original colors ──
             originalStyles.forEach(({ el, color }) => { el.style.color = color; });
 
             const img   = ganttCanvas.toDataURL('image/png', 1.0);
             const ratio = ganttCanvas.width / ganttCanvas.height;
             let w = CW, h = w / ratio;
-            if (h > 90) { h = 90; w = h * ratio; }  // slightly taller than before
+            if (h > 90) { h = 90; w = h * ratio; }
 
             checkPage(h + 18);
             setColor(...MID); doc.setFontSize(8); doc.setFont('helvetica', 'bold');
@@ -717,6 +829,7 @@ async function exportPDF() {
             doc.addImage(img, 'PNG', M + (CW - w) / 2, y + 3, w, h);
             y += h + 12;
         }
+
         drawPageFooter();
         doc.save(`FER_Report_${now.toISOString().slice(0, 10)}.pdf`);
 

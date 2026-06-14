@@ -207,9 +207,10 @@
         </div>
     </div>
 
-    <!-- ROW 1: 4 cards -->
+    <!-- ROW 1: Emotion Distribution | AU Radar | Negative Affect | Export -->
     <div class="analytics-row-1">
 
+        <!-- Emotion Distribution -->
         <div class="chart-card chart-card--doughnut">
             <div class="chart-card__title">Emotion Distribution</div>
             <div class="chart-wrapper">
@@ -217,15 +218,25 @@
                     <div class="skeleton-circle"></div>
                 </div>
                 <canvas id="emotionChart" class="chart-content"></canvas>
+                <!-- Dominant emotion label centered in doughnut hole -->
+                <div class="doughnut-center" id="doughnut-center">
+                    <span class="doughnut-center__label">Dominant</span>
+                    <span class="doughnut-center__value" id="dominant-emotion-label">--</span>
+                </div>
             </div>
             <div class="chart-meta">
                 <div class="meta-item">
                     <span>Session Duration</span>
                     <strong id="session-duration">--</strong>
                 </div>
+                <div class="meta-item">
+                    <span>Dominant Affect</span>
+                    <strong id="dominant-emotion-pct">--</strong>
+                </div>
             </div>
         </div>
 
+        <!-- Facial Action Units -->
         <div class="chart-card chart-card--radar">
             <div class="chart-card__title">Facial Action Units (AU)</div>
             <div class="chart-wrapper">
@@ -236,19 +247,76 @@
             </div>
             <div class="chart-meta">
                 <div class="meta-item">
+                    <span>Peak AU</span>
+                    <strong id="peak-au">--</strong>
+                </div>
+                <div class="meta-item">
                     <span>Genuine Smile</span>
                     <strong id="genuine-smile">--</strong>
                 </div>
             </div>
         </div>
 
-        <div class="chart-card chart-card--bar">
+        <!-- Negative Affect Load — gauge replacing bar chart -->
+        <div class="chart-card chart-card--gauge">
             <div class="chart-card__title">Negative Affect Load</div>
             <div class="chart-wrapper">
                 <div id="negaffect-skeleton" class="skeleton-loader">
                     <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>
                 </div>
-                <canvas id="negAffectChart" class="chart-content"></canvas>
+                <div class="neg-affect-gauge chart-content" id="negAffectGauge">
+                    <!-- Master gauge -->
+                    <div class="gauge-group gauge-group--master">
+                        <div class="gauge-header">
+                            <span class="gauge-header__label">Total negative affect</span>
+                            <span class="gauge-header__value" id="neg-affect-total">--</span>
+                        </div>
+                        <div class="gauge-track">
+                            <div class="gauge-fill" id="neg-affect-fill-total" style="width:0%"></div>
+                            <div class="gauge-threshold-line" title="Clinical concern threshold (40%)"></div>
+                        </div>
+                        <div class="gauge-sublabel">Threshold at 40%</div>
+                    </div>
+                    <!-- Per-emotion breakdown -->
+                    <div class="gauge-breakdown">
+                        <div class="gauge-group">
+                            <div class="gauge-header">
+                                <span class="gauge-header__label">Anger</span>
+                                <span class="gauge-header__value gauge-header__value--anger" id="neg-affect-anger">--</span>
+                            </div>
+                            <div class="gauge-track">
+                                <div class="gauge-fill gauge-fill--anger" id="neg-affect-fill-anger" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="gauge-group">
+                            <div class="gauge-header">
+                                <span class="gauge-header__label">Sadness</span>
+                                <span class="gauge-header__value gauge-header__value--sad" id="neg-affect-sad">--</span>
+                            </div>
+                            <div class="gauge-track">
+                                <div class="gauge-fill gauge-fill--sad" id="neg-affect-fill-sad" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="gauge-group">
+                            <div class="gauge-header">
+                                <span class="gauge-header__label">Fear</span>
+                                <span class="gauge-header__value gauge-header__value--fear" id="neg-affect-fear">--</span>
+                            </div>
+                            <div class="gauge-track">
+                                <div class="gauge-fill gauge-fill--fear" id="neg-affect-fill-fear" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="gauge-group">
+                            <div class="gauge-header">
+                                <span class="gauge-header__label">Disgust</span>
+                                <span class="gauge-header__value gauge-header__value--disgust" id="neg-affect-disgust">--</span>
+                            </div>
+                            <div class="gauge-track">
+                                <div class="gauge-fill gauge-fill--disgust" id="neg-affect-fill-disgust" style="width:0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="chart-meta">
                 <div class="meta-item">
@@ -258,6 +326,7 @@
             </div>
         </div>
 
+        <!-- Export -->
         <div class="export-card">
             <div class="export-header">
                 <h3>Export Data</h3>
@@ -265,15 +334,28 @@
             </div>
             <div class="export-buttons">
                 <button class="export-btn" onclick="exportData('csv')">
-                    <span class="export-btn-icon">📄</span>
+                    <svg class="export-btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
                     <span class="export-btn-label">Raw CSV</span>
                 </button>
                 <button class="export-btn" onclick="exportData('psych')">
-                    <span class="export-btn-icon">📋</span>
+                    <svg class="export-btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 11l3 3L22 4"/>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
                     <span class="export-btn-label">Observation Log</span>
                 </button>
                 <button class="export-btn" onclick="exportData('pdf')">
-                    <span class="export-btn-icon">📊</span>
+                    <svg class="export-btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <rect x="8" y="13" width="8" height="2" rx="1"/>
+                        <rect x="8" y="17" width="5" height="2" rx="1"/>
+                    </svg>
                     <span class="export-btn-label">PDF Report</span>
                 </button>
             </div>
@@ -281,7 +363,7 @@
 
     </div>
 
-    <!-- ROW 2: 2 cards -->
+    <!-- ROW 2: Emotional Stability (1fr) | Emotion Timeline (2fr) -->
     <div class="analytics-row-2">
 
         <div class="chart-card chart-card--line">
@@ -297,6 +379,10 @@
                     <span>Stability Index</span>
                     <strong id="stability-index">--</strong>
                 </div>
+                <div class="meta-item">
+                    <span>State</span>
+                    <strong id="stability-state">--</strong>
+                </div>
             </div>
         </div>
 
@@ -306,19 +392,27 @@
                 <div id="gantt-skeleton" class="skeleton-loader">
                     <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>
                 </div>
-                <div id="ganttChart" class="chart-content gantt-chart-container"></div>
+                <div id="ganttChart" class="chart-content gantt-chart-container">
+                    <div class="gantt-track" id="ganttTrack"></div>
+                    <div class="gantt-timestamps" id="ganttTimestamps"></div>
+                    <div class="gantt-legend" id="ganttLegend"></div>
+                </div>
             </div>
             <div class="chart-meta">
                 <div class="meta-item">
                     <span>Emotion Shifts</span>
                     <strong id="emotion-shifts">--</strong>
                 </div>
+                <div class="meta-item">
+                    <span>Dominant (session)</span>
+                    <strong id="timeline-dominant">--</strong>
+                </div>
             </div>
         </div>
 
     </div>
 
-    <!-- ROW 3: 2 cards -->
+    <!-- ROW 3: Eye Openness (2fr) | Arousal + Valence dual gauge (1fr) -->
     <div class="analytics-row-3">
 
         <div class="chart-card chart-card--line">
@@ -341,18 +435,56 @@
             </div>
         </div>
 
-        <div class="chart-card chart-card--bar">
-            <div class="chart-card__title">Arousal Level</div>
+        <!-- Arousal + Valence — dual gauge replacing single bar chart -->
+        <div class="chart-card chart-card--gauge">
+            <div class="chart-card__title">Arousal &amp; Valence</div>
             <div class="chart-wrapper">
                 <div id="arousal-skeleton" class="skeleton-loader">
                     <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>
                 </div>
-                <canvas id="arousalChart" class="chart-content"></canvas>
+                <div class="arousal-valence-gauge chart-content" id="arousalValenceGauge">
+
+                    <div class="av-gauge-item">
+                        <div class="gauge-header">
+                            <span class="gauge-header__label">Arousal</span>
+                            <span class="gauge-header__value" id="arousal-value">--</span>
+                        </div>
+                        <div class="gauge-track gauge-track--arousal">
+                            <div class="gauge-fill gauge-fill--arousal" id="arousal-fill" style="width:0%"></div>
+                        </div>
+                        <div class="gauge-range-labels">
+                            <span>Calm</span><span>Activated</span>
+                        </div>
+                        <div class="gauge-meta" id="arousal-meta" style="font-size:0.75rem;opacity:0.5;margin-top:2px;">Nervous system activation level</div> <!-- ← add -->
+                    </div>
+
+                    <div class="av-gauge-item">
+                        <div class="gauge-header">
+                            <span class="gauge-header__label">Valence</span>
+                            <span class="gauge-header__value" id="valence-value">--</span>
+                        </div>
+                        <div class="gauge-track gauge-track--valence">
+                            <div class="gauge-fill gauge-fill--valence" id="valence-fill" style="width:0%"></div>
+                        </div>
+                        <div class="gauge-range-labels">
+                            <span>Negative</span><span>Positive</span>
+                        </div>
+                        <div class="gauge-meta" id="valence-meta" style="font-size:0.75rem;opacity:0.5;margin-top:2px;">Emotional tone from mouth corner curve</div> <!-- ← add -->
+                    </div>
+
+                    <div class="av-state-label" id="av-state-label" style="font-size:0.7rem;opacity:0.5;text-transform:uppercase;letter-spacing:0.08em;margin-top:8px;">Current arousal state</div> <!-- ← add -->
+                    <div class="av-state-badge" id="av-state-badge">--</div>
+
+                </div>
             </div>
             <div class="chart-meta">
                 <div class="meta-item">
-                    <span>Current Arousal</span>
+                    <span>Arousal Level</span>
                     <strong id="arousal-level">--</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Valence (mouth curve)</span>
+                    <strong id="valence-level">--</strong>
                 </div>
             </div>
         </div>

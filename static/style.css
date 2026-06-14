@@ -385,3 +385,268 @@ video{position:absolute;display:block;opacity:0;width:0;height:0;}
   .analytics-row-3{grid-template-columns:1fr;gap:.75em;}
   .analytics-row-4{gap:.75em;}
 }
+
+
+/* ============================================================
+   ANALYSIS PAGE — supplemental styles
+   Paste into your existing CSS file (or link as a separate sheet).
+   All variables already defined in your :root — no overrides needed.
+   ============================================================ */
+
+/* ── ROW 2: give Timeline 2x the space ── */
+.analytics-row-2 {
+    grid-template-columns: 1fr 2fr;
+}
+
+/* ── ROW 3: give EAR 2x the space ── */
+.analytics-row-3 {
+    grid-template-columns: 2fr 1fr;
+}
+
+/* ── DOUGHNUT CENTER LABEL ── */
+.doughnut-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .1em;
+}
+.doughnut-center__label {
+    font-size: .62rem;
+    color: rgba(255,255,255,.4);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    display: block;
+}
+.doughnut-center__value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent);
+    display: block;
+    line-height: 1.2;
+}
+
+/* ── GAUGE — shared base ── */
+.gauge-group {
+    display: flex;
+    flex-direction: column;
+    gap: .35em;
+}
+.gauge-group--master {
+    margin-bottom: .6em;
+}
+.gauge-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+.gauge-header__label {
+    font-size: .72rem;
+    color: rgba(255,255,255,.55);
+}
+.gauge-header__value {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+/* per-emotion value colors */
+.gauge-header__value--anger   { color: var(--emotion-anger);   }
+.gauge-header__value--sad     { color: var(--emotion-sad);     }
+.gauge-header__value--fear    { color: var(--emotion-fear);    }
+.gauge-header__value--disgust { color: var(--emotion-disgust); }
+
+.gauge-track {
+    width: 100%;
+    height: .55em;
+    background: rgba(255,255,255,.1);
+    border-radius: 99px;
+    overflow: visible;
+    position: relative;
+}
+.gauge-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width .6s ease;
+}
+
+/* master gauge gradient — goes red above threshold */
+#neg-affect-fill-total {
+    background: linear-gradient(90deg, #FFD700 0%, #FFD700 40%, #ff5555 100%);
+}
+/* threshold marker at 40% */
+.gauge-threshold-line {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    left: 40%;
+    width: 2px;
+    background: rgba(255,255,255,.35);
+    border-radius: 2px;
+    pointer-events: none;
+}
+.gauge-sublabel {
+    font-size: .65rem;
+    color: rgba(255,255,255,.3);
+    text-align: right;
+}
+
+/* per-emotion fill colors */
+.gauge-fill--anger   { background: var(--emotion-anger);   }
+.gauge-fill--sad     { background: var(--emotion-sad);     }
+.gauge-fill--fear    { background: var(--emotion-fear);    }
+.gauge-fill--disgust { background: var(--emotion-disgust); }
+
+/* breakdown section spacing */
+.gauge-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: .65em;
+}
+
+/* neg affect gauge content area */
+.neg-affect-gauge {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: .25em 0;
+    gap: 0;
+}
+
+/* ── AROUSAL + VALENCE DUAL GAUGE ── */
+.arousal-valence-gauge {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.2em;
+    padding: .25em 0;
+}
+.av-gauge-item {
+    display: flex;
+    flex-direction: column;
+    gap: .4em;
+}
+.gauge-track--arousal {
+    background: rgba(255,255,255,.1);
+}
+.gauge-track--valence {
+    background: rgba(255,255,255,.1);
+}
+.gauge-fill--arousal {
+    background: linear-gradient(90deg, #55aaff, #FFD700, #ff5555);
+}
+.gauge-fill--valence {
+    background: linear-gradient(90deg, #ff5555, #FFD700, #39ffb4);
+}
+.gauge-range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: .63rem;
+    color: rgba(255,255,255,.28);
+    margin-top: .1em;
+}
+.av-state-badge {
+    margin-top: .25em;
+    padding: .55em .85em;
+    background: rgba(255,255,255,.06);
+    border-radius: .5em;
+    font-size: .8rem;
+    font-weight: 500;
+    color: rgba(255,255,255,.75);
+    text-align: center;
+}
+
+/* ── GANTT inside chart-content ── */
+.gantt-chart-container {
+    display: flex;
+    flex-direction: column;
+    gap: .7em;
+    height: 100%;
+    justify-content: center;
+}
+.gantt-track {
+    display: flex;
+    width: 100%;
+    height: 2.4em;
+    border-radius: .45em;
+    overflow: hidden;
+    gap: 2px;
+    flex-shrink: 0;
+}
+.gantt-segment {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: .3em;
+    transition: opacity .2s ease;
+    flex-shrink: 0;
+}
+.gantt-segment:hover {
+    opacity: .78;
+    cursor: default;
+}
+.gantt-seg-label {
+    font-size: .62rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 .3em;
+    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+.gantt-timestamps {
+    display: flex;
+    justify-content: space-between;
+    font-size: .65rem;
+    color: rgba(255,255,255,.28);
+    flex-shrink: 0;
+}
+.gantt-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .3em .75em;
+    font-size: .7rem;
+    color: rgba(255,255,255,.6);
+    flex-shrink: 0;
+}
+.gantt-legend-item {
+    display: flex;
+    align-items: center;
+    gap: .3em;
+    white-space: nowrap;
+}
+.gantt-dot {
+    width: .5em;
+    height: .5em;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+/* ── EXPORT — replace emoji with SVG icons ── */
+.export-btn-icon {
+    flex-shrink: 0;
+    opacity: .8;
+    display: flex;
+    align-items: center;
+}
+
+/* ── STABILITY reference band (drawn via Chart.js plugin) ── */
+/* No extra CSS needed — handled in JS */
+
+/* ── RESPONSIVE overrides ── */
+@media (max-width: 1200px) {
+    .analytics-row-2 { grid-template-columns: 1fr 1fr; }
+    .analytics-row-3 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 900px) {
+    .analytics-row-2 { grid-template-columns: 1fr; }
+    .analytics-row-3 { grid-template-columns: 1fr; }
+}
