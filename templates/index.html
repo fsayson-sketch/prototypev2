@@ -20,12 +20,11 @@
         <div class="emotion-readout">
             <div class="readout-main" id="emotion-display">--</div>
             <div class="readout-sub" id="confidence-display">Ready to start</div>
+            <div id="distance-badge" class="distance-badge">-- cm</div>
         </div>
 
-        <!-- ★ DISTANCE BADGE -->
-        <div id="distance-badge" class="distance-badge">-- cm</div>
-
         <canvas id="video-canvas-dash"></canvas>
+
         <div class="comp-cam-btn-overlay">
             <button class="start-button">Start Logging</button>
         </div>
@@ -66,7 +65,7 @@
         </div>
     </div>
 
-    <div class="comp-content__note">
+    <div class="dash-note">
         <strong>Live inference mode.</strong> Confidence values reflect the model's softmax output — how certain the model is in its prediction, not a measure of correctness. Metrics requiring ground-truth labels (Accuracy, Precision, Recall, F1, ECE, Confusion Matrix) cannot be computed here. Performance figures cited in this study were computed on the held-out FER2013 test set.
     </div>
 
@@ -74,11 +73,10 @@
 
 <!--========== COMPARISON PAGE ==========-->
 <section id="comparison-page" class="page-section">
-
     <div class="comp-main-row">
 
+        <!-- Camera — LEFT -->
         <div class="comp-content__cam cam-panel">
-
             <div class="comp-legend-row" id="comp-content__emotion-legend">
                 <div class="emotion-legend-inner">
                     <span class="legend-item"><span class="legend-dot happy"></span>Happy</span>
@@ -90,85 +88,80 @@
                     <span class="legend-item"><span class="legend-dot neutral"></span>Neutral</span>
                 </div>
             </div>
-
-            <div class="cam-overlay-badge">Live Feed</div>
-
-            <!-- ★ DISTANCE BADGE (comp page — separate id) -->
-            <div id="distance-badge-comp" class="distance-badge">-- cm</div>
-
+            <div class="emotion-readout">
+                <div class="readout-main" id="comp-distance-label">Live Feed</div>
+                <div id="distance-badge-comp" class="distance-badge">-- cm</div>
+            </div>
             <canvas id="video-canvas-comp"></canvas>
             <div class="comp-cam-btn-overlay">
                 <button class="start-button">Start Comparison</button>
             </div>
-
         </div>
 
-        <div class="comp-content__panels">
-
-            <!-- CNN Panel -->
-            <div class="comp-panel">
-                <div class="comp-panel__header">
-                    <h3 class="comp-panel__title">CNN</h3>
-                    <span class="comp-panel__badge">Baseline</span>
-                </div>
-                <div class="comp-panel__readout">
-                    <div class="readout-main" id="comp-cnn-label">--</div>
-                    <div class="readout-sub" id="comp-cnn-confidence">0.0% | -- ms</div>
-                </div>
-                <div class="dash-summary-panel">
-                    <div class="metric-card"><span>Current Conf.</span><strong id="comp-cnn-conf">--</strong></div>
-                    <div class="metric-card"><span>Avg Confidence</span><strong id="comp-cnn-avg-conf">--</strong></div>
-                    <div class="metric-card"><span>Dominant Emotion</span><strong id="comp-cnn-dominant">--</strong></div>
-                    <div class="metric-card"><span>Low Conf. Frames</span><strong id="comp-cnn-low">0</strong></div>
-                </div>
-                <div class="emotion-bars-panel" id="cnn-emotion-bars">
-                    <h4 class="emotion-bars-title">Live Probabilities</h4>
-                    <div class="emotion-bars-list" id="cnn-bars-list">
-                        <div class="emotion-bar-skeleton-list">
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:45%"></div></div><div class="ebar-skel-pct"></div></div>
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:30%"></div></div><div class="ebar-skel-pct"></div></div>
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:60%"></div></div><div class="ebar-skel-pct"></div></div>
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:20%"></div></div><div class="ebar-skel-pct"></div></div>
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:75%"></div></div><div class="ebar-skel-pct"></div></div>
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:15%"></div></div><div class="ebar-skel-pct"></div></div>
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:50%"></div></div><div class="ebar-skel-pct"></div></div>
-                        </div>
+        <!-- CNN Panel — MIDDLE -->
+        <div class="comp-panel">
+            <div class="comp-panel__header">
+                <h3 class="comp-panel__title">CNN</h3>
+                <span class="comp-panel__badge">Baseline</span>
+            </div>
+            <div class="comp-panel__readout">
+                <div class="readout-main" id="comp-cnn-label">--</div>
+                <div class="readout-sub" id="comp-cnn-confidence">0.0% | -- ms</div>
+            </div>
+            <div class="dash-summary-panel">
+                <div class="metric-card"><span>Current Conf.</span><strong id="comp-cnn-conf">--</strong></div>
+                <div class="metric-card"><span>Avg Confidence</span><strong id="comp-cnn-avg-conf">--</strong></div>
+                <div class="metric-card"><span>Dominant Emotion</span><strong id="comp-cnn-dominant">--</strong></div>
+                <div class="metric-card"><span>Low Conf. Frames</span><strong id="comp-cnn-low">0</strong></div>
+            </div>
+            <div class="emotion-bars-panel" id="cnn-emotion-bars">
+                <h4 class="emotion-bars-title">Live Probabilities</h4>
+                <div class="emotion-bars-list" id="cnn-bars-list">
+                    <div class="emotion-bar-skeleton-list">
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:45%"></div></div><div class="ebar-skel-pct"></div></div>
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:30%"></div></div><div class="ebar-skel-pct"></div></div>
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:60%"></div></div><div class="ebar-skel-pct"></div></div>
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:20%"></div></div><div class="ebar-skel-pct"></div></div>
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:75%"></div></div><div class="ebar-skel-pct"></div></div>
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:15%"></div></div><div class="ebar-skel-pct"></div></div>
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:50%"></div></div><div class="ebar-skel-pct"></div></div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Ensemble Panel -->
-            <div class="comp-panel">
-                <div class="comp-panel__header">
-                    <h3 class="comp-panel__title">Ensemble</h3>
-                    <span class="comp-panel__badge comp-panel__badge--enhanced">Enhanced</span>
-                </div>
-                <div class="comp-panel__readout">
-                    <div class="readout-main" id="comp-ens-label">--</div>
-                    <div class="readout-sub" id="comp-ens-confidence">0.0% | -- ms</div>
-                </div>
-                <div class="dash-summary-panel">
-                    <div class="metric-card"><span>Current Conf.</span><strong id="comp-ensemble-conf">--</strong></div>
-                    <div class="metric-card"><span>Avg Confidence</span><strong id="comp-ens-avg-conf">--</strong></div>
-                    <div class="metric-card"><span>Dominant Emotion</span><strong id="comp-ens-dominant">--</strong></div>
-                    <div class="metric-card"><span>Low Conf. Frames</span><strong id="comp-ens-low">0</strong></div>
-                </div>
-                <div class="emotion-bars-panel" id="ensemble-emotion-bars">
-                    <h4 class="emotion-bars-title">Live Probabilities</h4>
-                    <div class="emotion-bars-list" id="ensemble-bars-list">
-                        <div class="emotion-bar-skeleton-list">
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:55%"></div></div><div class="ebar-skel-pct"></div></div>
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:25%"></div></div><div class="ebar-skel-pct"></div></div>
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:40%"></div></div><div class="ebar-skel-pct"></div></div>
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:65%"></div></div><div class="ebar-skel-pct"></div></div>
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:10%"></div></div><div class="ebar-skel-pct"></div></div>
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:80%"></div></div><div class="ebar-skel-pct"></div></div>
-                            <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:35%"></div></div><div class="ebar-skel-pct"></div></div>
-                        </div>
+        
+
+        <!-- Ensemble Panel — RIGHT -->
+        <div class="comp-panel">
+            <div class="comp-panel__header">
+                <h3 class="comp-panel__title">Ensemble</h3>
+                <span class="comp-panel__badge comp-panel__badge--enhanced">Enhanced</span>
+            </div>
+            <div class="comp-panel__readout">
+                <div class="readout-main" id="comp-ens-label">--</div>
+                <div class="readout-sub" id="comp-ens-confidence">0.0% | -- ms</div>
+            </div>
+            <div class="dash-summary-panel">
+                <div class="metric-card"><span>Current Conf.</span><strong id="comp-ensemble-conf">--</strong></div>
+                <div class="metric-card"><span>Avg Confidence</span><strong id="comp-ens-avg-conf">--</strong></div>
+                <div class="metric-card"><span>Dominant Emotion</span><strong id="comp-ens-dominant">--</strong></div>
+                <div class="metric-card"><span>Low Conf. Frames</span><strong id="comp-ens-low">0</strong></div>
+            </div>
+            <div class="emotion-bars-panel" id="ensemble-emotion-bars">
+                <h4 class="emotion-bars-title">Live Probabilities</h4>
+                <div class="emotion-bars-list" id="ensemble-bars-list">
+                    <div class="emotion-bar-skeleton-list">
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:55%"></div></div><div class="ebar-skel-pct"></div></div>
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:25%"></div></div><div class="ebar-skel-pct"></div></div>
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:40%"></div></div><div class="ebar-skel-pct"></div></div>
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:65%"></div></div><div class="ebar-skel-pct"></div></div>
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:10%"></div></div><div class="ebar-skel-pct"></div></div>
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:80%"></div></div><div class="ebar-skel-pct"></div></div>
+                        <div class="emotion-bar-skeleton-row"><div class="ebar-skel-label"></div><div class="ebar-skel-track"><div class="ebar-skel-fill" style="width:35%"></div></div><div class="ebar-skel-pct"></div></div>
                     </div>
                 </div>
             </div>
-
         </div>
 
     </div>
@@ -189,8 +182,6 @@
             <span><strong>EAR:</strong> Eye Aspect Ratio via MediaPipe landmarks</span>
             <span><strong>AU:</strong> Action Unit proxies (FACS-based)</span>
             <span><strong>Arousal:</strong> Valence-arousal mapping from predicted emotion</span>
-            <!-- ★ NEW -->
-            <span><strong>Distance:</strong> Pinhole model via bbox width — calibrates on first frame</span>
         </div>
     </div>
 
