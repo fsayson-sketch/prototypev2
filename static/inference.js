@@ -177,7 +177,7 @@ function renderEmotionBars(containerId, probs) {
 
     if (!probs) {
         if (!container.querySelector('.emotion-bar-skeleton-list'))
-            container.innerHTML = '<span class="emotion-bars-placeholder">No data</span>';
+            container.innerHTML = '<div class="emotion-bars-placeholder">No data</div>';
         return;
     }
 
@@ -205,7 +205,7 @@ function updateDistanceBadge(page, cm) {
     if (!badge) return;
 
     if (cm == null || cm <= 0) {
-        badge.textContent       = '-- cm';
+        badge.textContent       = 'Optimal Distance - cm';
         badge.style.background  = 'rgba(0,0,0,0.55)';
         badge.style.color       = '#fff';
         badge.style.borderColor = 'rgba(255,255,255,0.2)';
@@ -213,7 +213,7 @@ function updateDistanceBadge(page, cm) {
     }
 
     const zone = getDistanceZone(cm);
-    badge.textContent       = `📏 ${cm} cm  —  ${zone.label}`;
+    badge.textContent       = `${cm} cm  —  ${zone.label}`;
     badge.style.background  = 'rgba(0,0,0,0.65)';
     badge.style.color       = zone.color;
     badge.style.borderColor = zone.color + '88';
