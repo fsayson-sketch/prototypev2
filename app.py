@@ -521,6 +521,11 @@ def predict():
 
     return jsonify(result)
 
+@app.route('/model_metrics')
+def model_metrics_route():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model_metrics.json')
+    with open(path) as f:
+        return jsonify(json.load(f))
 # ─────────────── Entry point ───────────────
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

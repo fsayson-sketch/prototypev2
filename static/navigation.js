@@ -23,6 +23,11 @@ function switchPage(link) {
         return;
     }
 
+    if (link === 'model-info') {
+        if (window._loadModelInfoMetrics) window._loadModelInfoMetrics();
+        return
+    }
+
     resetSessionCounters();
     setTextContent('comp-cnn-avg-conf', '--');
     setTextContent('comp-ens-avg-conf', '--');
