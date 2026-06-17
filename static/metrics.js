@@ -7,6 +7,22 @@ const distanceHistory     = [];
 const MAX_METRIC_HISTORY  = 30;
 const MAX_HISTORY         = 60;
 
+let blinkBelowThreshold = false;   
+
+function detectBlink(ear) {       
+    const THRESHOLD = 0.21;
+    if (ear < THRESHOLD) {
+        blinkBelowThreshold = true;
+        return false;
+    } else {
+        if (blinkBelowThreshold) {
+            blinkBelowThreshold = false;
+            return true;
+        }
+        return false;
+    }
+}
+
 function getSmileCategory(score) {
     if (score < 30) return 'Slight Smile';
     if (score < 55) return 'Open Smile';
@@ -66,7 +82,7 @@ function computeFacialMetrics(landmarks) {
 
     return {
         EAR,
-        isBlink      : EAR < 0.21,
+        isBlink: detectBlink(EAR),
         isDuchenne   : au.AU6 > 25 && au.AU12 > 35,
         eyeContact   : clamp(EAR * 220, 0, 100),
         smileScore,
@@ -108,4 +124,5 @@ function clearMetricHistory() {
     auHistory.length           = 0;
     arousalHistory.length      = 0;
     distanceHistory.length     = 0;
+    blinkBelowThreshold        = false;
 }

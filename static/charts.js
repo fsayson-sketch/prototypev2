@@ -39,7 +39,7 @@ function renderChart() {
     const total      = sessionLog.size;
 
     // ══════════════════════════════════════════════════════
-    // 1. EMOTION DISTRIBUTION — doughnut
+    // 1. Facial Expression Distribution — doughnut
     // ══════════════════════════════════════════════════════
     const distLabels = Object.keys(counts);
     const distData   = Object.values(counts);
@@ -96,14 +96,14 @@ function renderChart() {
 
     setTextContent('session-duration', `${(total * 0.25).toFixed(0)}s`);
 
-    // dominant emotion — center label + meta
+    // dominant expression — center label + meta
     const [domLabel, domCount] = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
     const domPct = (domCount / distTotal) * 100;
     setTextContent('dominant-emotion-label', domLabel);
     setTextContent('dominant-emotion-pct',   `${domLabel} — ${domPct.toFixed(1)}%`);
 
     // ══════════════════════════════════════════════════════
-    // 2. EMOTION TIMELINE — Gantt (DOM)
+    // 2. Expression TIMELINE — Gantt (DOM)
     // ══════════════════════════════════════════════════════
     const ganttTrackEl  = document.getElementById('ganttTrack');
     const ganttTimesEl  = document.getElementById('ganttTimestamps');
@@ -286,7 +286,7 @@ function renderChart() {
         const latest   = auHistory[auHistory.length - 1];
         const lid      = (latest['AU6']  || 0);
         const mc       = (latest['AU12'] || 0);
-        setTextContent('genuine-smile', (lid > 25 && mc > 35) ? '✓ Duchenne' : '✗ Non-Duchenne');
+        setTextContent('genuine-smile', (lid > 25 && mc > 35) ? ' Duchenne' : ' Non-Duchenne');
 
         auChartInstance = updateOrCreate(
             auChartInstance,

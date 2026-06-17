@@ -237,7 +237,14 @@ video{position:absolute;display:block;opacity:0;width:0;height:0;}
 .chart-wrapper{position:relative;width:100%;flex:1;min-height:200px;max-height:320px;}
 .chart-content{width:100%;height:100%;}
 .chart-card--doughnut,.chart-card--radar{height:100%;}
-.chart-card--doughnut .chart-wrapper,.chart-card--radar .chart-wrapper{min-height:200px;max-height:280px;display:flex;align-items:center;justify-content:center;}
+.chart-card--doughnut .chart-wrapper {
+    position: relative;
+    min-height: 200px;
+    max-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 .chart-card--doughnut .chart-content,.chart-card--radar .chart-content{max-height:300px;margin:0 auto;}
 .chart-card--line .chart-wrapper,.chart-card--bar .chart-wrapper,.chart-card--timeline .chart-wrapper{min-height:220px;}
 .chart-meta{display:flex;flex-direction:column;gap:.4em;font-size:.8rem;color:rgba(255,255,255,.7);flex-shrink:0;border-top:1px solid rgba(255,255,255,.08);padding-top:.7em;}
@@ -406,7 +413,7 @@ video{position:absolute;display:block;opacity:0;width:0;height:0;}
 /* ── DOUGHNUT CENTER LABEL ── */
 .doughnut-center {
     position: absolute;
-    top: 50%;
+    top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
