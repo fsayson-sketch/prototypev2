@@ -383,7 +383,7 @@ async function exportObservationLog() {
         }
 
         y += 6;
-        checkPage(20);
+        checkPage(80);
         addSectionTitle('Clinical Summary');
 
         const summaryLines = [
