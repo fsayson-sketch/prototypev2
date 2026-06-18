@@ -118,7 +118,7 @@
           </div>
           <div class="metric-card"><span>Current Conf.</span><strong id="comp-cnn-conf">--</strong></div>
           <div class="metric-card"><span>Avg Confidence</span><strong id="comp-cnn-avg-conf">--</strong></div>
-          <div class="metric-card"><span>Dominant Emotion</span><strong id="comp-cnn-dominant">--</strong></div>
+          <div class="metric-card"><span>Dominant Expression</span><strong id="comp-cnn-dominant">--</strong></div>
           <div class="metric-card"><span>Low Conf. Frames</span><strong id="comp-cnn-low">0</strong></div>
         </div>
         <div class="comp-panel__right">
@@ -144,7 +144,7 @@
           </div>
           <div class="metric-card"><span>Current Conf.</span><strong id="comp-ensemble-conf">--</strong></div>
           <div class="metric-card"><span>Avg Confidence</span><strong id="comp-ens-avg-conf">--</strong></div>
-          <div class="metric-card"><span>Dominant Emotion</span><strong id="comp-ens-dominant">--</strong></div>
+          <div class="metric-card"><span>Dominant Expression</span><strong id="comp-ens-dominant">--</strong></div>
           <div class="metric-card"><span>Low Conf. Frames</span><strong id="comp-ens-low">0</strong></div>
         </div>
         <div class="comp-panel__right">
@@ -207,18 +207,18 @@
         </div>
     </div>
 
-    <!-- ROW 1: Emotion Distribution | AU Radar | Negative Affect | Export -->
+    <!-- ROW 1: Facial Expression Distribution | AU Radar | Negative Affect | Export -->
     <div class="analytics-row-1">
 
-        <!-- Emotion Distribution -->
+        <!-- Facial Expression Distribution -->
         <div class="chart-card chart-card--doughnut">
-            <div class="chart-card__title">Emotion Distribution</div>
+            <div class="chart-card__title">Facial Expression Distribution</div>
             <div class="chart-wrapper">
                 <div id="emotion-skeleton" class="skeleton-loader">
                     <div class="skeleton-circle"></div>
                 </div>
                 <canvas id="emotionChart" class="chart-content"></canvas>
-                <!-- Dominant emotion label centered in doughnut hole -->
+                <!-- Dominant Expression label centered in doughnut hole -->
                 <div class="doughnut-center" id="doughnut-center">
                     <span class="doughnut-center__label">Dominant</span>
                     <span class="doughnut-center__value" id="dominant-emotion-label">--</span>
@@ -363,7 +363,7 @@
 
     </div>
 
-    <!-- ROW 2: Emotional Stability (1fr) | Emotion Timeline (2fr) -->
+    <!-- ROW 2: Emotional Stability (1fr) | Expression Timeline (2fr) -->
     <div class="analytics-row-2">
 
         <div class="chart-card chart-card--line">
@@ -387,7 +387,7 @@
         </div>
 
         <div class="chart-card chart-card--timeline">
-            <div class="chart-card__title">Emotion Timeline</div>
+            <div class="chart-card__title">EXpression Timeline</div>
             <div class="chart-wrapper">
                 <div id="gantt-skeleton" class="skeleton-loader">
                     <div class="skeleton-bar" style="width:100%;height:100%;border-radius:.5em;"></div>

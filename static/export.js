@@ -33,26 +33,44 @@ function snapshotCanvas(canvasEl, maxW, maxH) {
     const chart = Object.values(Chart.instances).find(c => c.canvas === canvasEl);
 
     if (chart) {
-        chart.options.plugins.legend.labels.color = '#1e1e1e';
-        // ← add: override generateLabels to force dark color
-        const origGenerateLabels = chart.options.plugins.legend.labels.generateLabels;
-        if (origGenerateLabels) {
-            chart.options.plugins.legend.labels.generateLabels = (c) => {
-                const labels = origGenerateLabels(c);
-                labels.forEach(l => { l.fontColor = '#1e1e1e'; l.color = '#1e1e1e'; });
-                return labels;
-            };
-        }
-        if (chart.options.plugins.datalabels) {
+        // hide legend during export to avoid white-on-white
+        const hadLegend = chart.options.plugins.legend.display;
+        chart.options.plugins.legend.display = false;
+
+        if (chart.options.plugins.datalabels)
             chart.options.plugins.datalabels.color = '#1e1e1e';
-        }
         chart.options.scales && Object.values(chart.options.scales).forEach(scale => {
             if (scale.ticks) scale.ticks.color = '#1e1e1e';
             if (scale.title) scale.title.color = '#1e1e1e';
         });
         chart.update('none');
+
+        const offscreen = document.createElement('canvas');
+        offscreen.width  = canvasEl.width;
+        offscreen.height = canvasEl.height;
+        const ctx = offscreen.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, offscreen.width, offscreen.height);
+        ctx.drawImage(canvasEl, 0, 0);
+        const img = offscreen.toDataURL('image/png', 1.0);
+
+        // restore
+        chart.options.plugins.legend.display = hadLegend;
+        if (chart.options.plugins.datalabels)
+            chart.options.plugins.datalabels.color = '#ffffff';
+        chart.options.scales && Object.values(chart.options.scales).forEach(scale => {
+            if (scale.ticks) scale.ticks.color = '#ffffff';
+            if (scale.title) scale.title.color = '#ffffff';
+        });
+        chart.update('none');
+
+        const ratio = offscreen.width / offscreen.height;
+        let w = maxW, h = w / ratio;
+        if (h > maxH) { h = maxH; w = h * ratio; }
+        return { img, w, h };
     }
 
+    // fallback — no chart instance found
     const offscreen = document.createElement('canvas');
     offscreen.width  = canvasEl.width;
     offscreen.height = canvasEl.height;
@@ -61,23 +79,6 @@ function snapshotCanvas(canvasEl, maxW, maxH) {
     ctx.fillRect(0, 0, offscreen.width, offscreen.height);
     ctx.drawImage(canvasEl, 0, 0);
     const img = offscreen.toDataURL('image/png', 1.0);
-
-    if (chart) {
-        chart.options.plugins.legend.labels.color = '#ffffff';
-        // ← restore original generateLabels
-        if (chart.options.plugins.legend.labels.generateLabels?._original) {
-            chart.options.plugins.legend.labels.generateLabels = chart.options.plugins.legend.labels.generateLabels._original;
-        }
-        if (chart.options.plugins.datalabels) {
-            chart.options.plugins.datalabels.color = '#ffffff';
-        }
-        chart.options.scales && Object.values(chart.options.scales).forEach(scale => {
-            if (scale.ticks) scale.ticks.color = '#ffffff';
-            if (scale.title) scale.title.color = '#ffffff';
-        });
-        chart.update('none');
-    }
-
     const ratio = offscreen.width / offscreen.height;
     let w = maxW, h = w / ratio;
     if (h > maxH) { h = maxH; w = h * ratio; }
@@ -266,7 +267,7 @@ async function exportObservationLog() {
             { label: 'Total Frames',     value: total },
             { label: 'Duration',         value: `${duration}s` },
             { label: 'Avg Confidence',   value: `${avgConf}%` },
-            { label: 'Dominant Emotion', value: dominant[0] },
+            { label: 'Dominant Expression', value: dominant[0] },
             { label: 'Low Conf. Frames', value: lowConfCount },
         ];
         const bw = CW / metricBoxes.length;
@@ -388,7 +389,7 @@ async function exportObservationLog() {
         const summaryLines = [
             `This report was generated on ${dateStr} at ${timeStr} from a live facial expression recognition session.`,
             `A total of ${total} frames were analysed over approximately ${duration} seconds using the Ensemble CNN–CatBoost model.`,
-            `The predominant emotion observed was ${dominant[0]}, accounting for ${dominantPct}% of all frames.`,
+            `The predominant expression observed was ${dominant[0]}, accounting for ${dominantPct}% of all frames.`,
             `Average model confidence across the session was ${avgConf}%. ${lowConfCount} frame(s) fell below the 50% confidence threshold.`,
             ``,
             `Note: All predictions are model inferences on live video frames. This report does not constitute a clinical diagnosis.`,
@@ -584,7 +585,7 @@ async function exportPDF() {
             { label: 'Total Frames',     value: total },
             { label: 'Duration',         value: `${duration}s` },
             { label: 'Avg Confidence',   value: `${avgConf}%` },
-            { label: 'Dominant Emotion', value: dominant[0] },
+            { label: 'Dominant Expression', value: dominant[0] },
             { label: 'Low Conf. Frames', value: lowConfCount },
         ];
         const bw = CW / metricBoxes.length;
@@ -694,7 +695,7 @@ async function exportPDF() {
         setFill(...PANEL); setDraw(...DIVIDER);
         doc.roundedRect(M, y, CW, 12, 1.5, 1.5, 'FD');
         setColor(...MAROON); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
-        doc.text('CURRENT AROUSAL STATE', M + 4, y + 5);
+        doc.text('AROUSAL STATE', M + 4, y + 5);
         setColor(...DARK); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
         doc.text(avState, M + 4, y + 10);
         y += 18;
@@ -739,10 +740,10 @@ async function exportPDF() {
         sectionTitle('Visualisations');
 
         const chartDefs = [
-            { id: 'emotionChart',   label: 'Emotion Distribution',       maxW: CW * 0.6, maxH: 80 },
-            { id: 'earChart',       label: 'Eye Openness + Blinks (EAR)', maxW: CW,       maxH: 65 },
-            { id: 'auChart',        label: 'Facial Action Units (AU)',     maxW: CW * 0.6, maxH: 80 },
-            { id: 'stabilityChart', label: 'Emotional Stability',         maxW: CW,       maxH: 65 },
+            { id: 'emotionChart',   label: 'Facial Expression Distribution',       maxW: CW,       maxH: 80 },
+            { id: 'earChart',       label: 'Eye Openness + Blinks (EAR)',          maxW: CW,       maxH: 65 },
+            { id: 'auChart',        label: 'Facial Action Units (AU)',             maxW: CW * 0.6, maxH: 80 },
+            { id: 'stabilityChart', label: 'Emotional Stability',                  maxW: CW,       maxH: 65 },
         ];
 
         for (const def of chartDefs) {
@@ -764,7 +765,83 @@ async function exportPDF() {
             doc.addImage(img, 'PNG', M + (CW - w) / 2, y + 3, w, h);
             y += h + 12;
 
-            // ← add stability meta row after stabilityChart
+            if (def.id === 'emotionChart') {
+                checkPage(16);
+                setFill(...PANEL); setDraw(...DIVIDER);
+                doc.setLineWidth(0.3);
+                doc.roundedRect(M, y, CW, 12, 1.5, 1.5, 'FD');
+                setColor(...MAROON); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+                doc.text('DOMINANT EXPRESSION', M + 4, y + 5);
+                setColor(...DARK); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+                doc.text(
+                    document.getElementById('dominant-emotion-pct')?.textContent || '--',
+                    CW / 2 + M, y + 9, { align: 'center' }
+                );
+                y += 17;
+
+                checkPage(28);
+                const allEmotions = ['Happy','Sad','Fear','Angry','Disgust','Surprise','Neutral'];
+                const emoColW = (CW - 4) / 2;
+                allEmotions.forEach((emotion, idx) => {
+                    const isLeft = idx % 2 === 0;
+                    const col    = isLeft ? M : M + emoColW + 4;
+                    const count  = counts[emotion] || 0;
+                    const pct    = count > 0 ? (count / distTotal * 100).toFixed(1) : null;
+                    const color  = emotionPalette[emotion] || [120, 120, 120];
+                    if (isLeft && idx > 0) y += 7;
+                    setFill(...color); doc.circle(col + 2, y + 3.5, 2, 'F');
+                    setColor(...DARK); doc.setFontSize(8); doc.setFont('helvetica', 'bold');
+                    doc.text(emotion, col + 7, y + 4.8);
+                    setColor(...MID); doc.setFont('helvetica', 'normal');
+                    doc.text(pct ? `${pct}%` : '--', col + emoColW - 2, y + 4.8, { align: 'right' });
+                });
+                y += 12;
+            }
+
+            if (def.id === 'earChart') {
+                checkPage(14);
+                setFill(...PANEL); setDraw(...DIVIDER);
+                doc.setLineWidth(0.3);
+                doc.roundedRect(M, y, CW, 12, 1.5, 1.5, 'FD');
+                setColor(...MAROON); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+                doc.text('BLINK COUNT', M + 4, y + 5);
+                setColor(...DARK); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+                doc.text(
+                    document.getElementById('blink-count')?.textContent || '--',
+                    M + 50, y + 9
+                );
+                setColor(...MAROON); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+                doc.text('AVG EAR', M + CW / 2, y + 5);
+                setColor(...DARK); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+                doc.text(
+                    document.getElementById('avg-ear')?.textContent || '--',
+                    M + CW / 2 + 30, y + 9
+                );
+                y += 18;
+            }
+
+            if (def.id === 'auChart') {
+                checkPage(14);
+                setFill(...PANEL); setDraw(...DIVIDER);
+                doc.setLineWidth(0.3);
+                doc.roundedRect(M, y, CW, 12, 1.5, 1.5, 'FD');
+                setColor(...MAROON); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+                doc.text('PEAK AU', M + 4, y + 5);
+                setColor(...DARK); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+                doc.text(
+                    document.getElementById('peak-au')?.textContent || '--',
+                    M + 30, y + 9
+                );
+                setColor(...MAROON); doc.setFontSize(7); doc.setFont('helvetica', 'bold');
+                doc.text('GENUINE SMILE', M + CW / 2, y + 5);
+                setColor(...DARK); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+                doc.text(
+                    document.getElementById('genuine-smile')?.textContent || '--',
+                    M + CW / 2 + 40, y + 9
+                );
+                y += 18;
+            }
+
             if (def.id === 'stabilityChart') {
                 checkPage(14);
                 setFill(...PANEL); setDraw(...DIVIDER);
@@ -779,57 +856,9 @@ async function exportPDF() {
                 setColor(...DARK); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
                 doc.text(stabilityState, M + CW / 2 + 20, y + 9);
                 y += 18;
-            }         // ← closes if
-        } 
-
-        // ── Gantt timeline ──
-        const ganttEl = document.getElementById('ganttTrack')?.closest('.chart-wrapper') 
-                     || document.getElementById('ganttTrack');
-        if (ganttEl && ganttEl.innerHTML.trim() !== '') {
-            const originalStyles = [];
-            ganttEl.querySelectorAll('*').forEach(el => {
-                const computed = window.getComputedStyle(el);
-                originalStyles.push({ el, color: el.style.color });
-                const c = computed.color;
-                if (c) {
-                    const match = c.match(/\d+/g);
-                    if (match) {
-                        const [r, g, b] = match.map(Number);
-                        if (r > 200 && g > 200 && b > 200) el.style.color = '#1e1e1e';
-                    }
-                }
-            });
-
-            const ganttCanvas = await html2canvas(ganttEl, {
-                backgroundColor: '#fff0f0',
-                scale: 2,
-                useCORS: true,
-                logging: false,
-                windowWidth: ganttEl.scrollWidth,
-                windowHeight: ganttEl.scrollHeight,
-            });
-
-            originalStyles.forEach(({ el, color }) => { el.style.color = color; });
-
-            const img   = ganttCanvas.toDataURL('image/png', 1.0);
-            const ratio = ganttCanvas.width / ganttCanvas.height;
-            let w = CW, h = w / ratio;
-            if (h > 90) { h = 90; w = h * ratio; }
-
-            checkPage(h + 18);
-            setColor(...MID); doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-            doc.text('EMOTION TIMELINE', M, y + 4);
-            setDraw(...DIVIDER); doc.setLineWidth(0.2);
-            doc.line(M, y + 5.5, W - M, y + 5.5);
-            y += 9;
-
-            setFill(...PANEL); setDraw(...DIVIDER);
-            doc.setLineWidth(0.3);
-            doc.roundedRect(M, y, CW, h + 6, 2, 2, 'FD');
-            doc.addImage(img, 'PNG', M + (CW - w) / 2, y + 3, w, h);
-            y += h + 12;
+            }
         }
-
+        
         drawPageFooter();
         doc.save(`FER_Report_${now.toISOString().slice(0, 10)}.pdf`);
 
