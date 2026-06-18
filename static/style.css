@@ -271,7 +271,7 @@ header .header-logo {
 .page-section.active {
     width: 100%;
     min-height: 0;
-    padding: 1em 5em;
+    padding: 3em 5em;
     overflow-x: hidden;
 }
 
