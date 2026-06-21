@@ -286,6 +286,8 @@ function renderChart() {
         const latest   = auHistory[auHistory.length - 1];
         const lid      = (latest['AU6']  || 0);
         const mc       = (latest['AU12'] || 0);
+        const peakIdx = auData.indexOf(Math.max(...auData));
+        setTextContent('peak-au', `${auLabels[peakIdx]} (${auData[peakIdx].toFixed(1)})`);
         setTextContent('genuine-smile', (lid > 25 && mc > 35) ? ' Duchenne' : ' Non-Duchenne');
 
         auChartInstance = updateOrCreate(
