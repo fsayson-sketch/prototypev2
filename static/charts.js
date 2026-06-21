@@ -94,7 +94,8 @@ function renderChart() {
         emotionChartInstance.update('none');
     }
 
-    setTextContent('session-duration', `${(total * 0.25).toFixed(0)}s`);
+    const elapsedSec = sessionStartTime ? ((Date.now() - sessionStartTime) / 1000).toFixed(0) : (total * 0.25).toFixed(0);
+    setTextContent('session-duration', `${elapsedSec}s`);
 
     // dominant expression — center label + meta
     const [domLabel, domCount] = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];

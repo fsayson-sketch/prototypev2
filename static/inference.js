@@ -4,6 +4,7 @@ let inferenceTimer    = null;
 let lastResult        = null;
 let inferenceInFlight = false;
 let activePage        = 'dashboard';
+let sessionStartTime  = null;
 
 // Dashboard rolling counters
 let dashCount   = 0;
@@ -31,6 +32,7 @@ function resetSessionCounters() {
     dashCount = 0; dashConfSum = 0;
     placeholderRemoved = false;
     clearMetricHistory();
+    sessionStartTime = Date.now(); 
 }
 
 // ─── SEND FRAME ───────────────────────────────────────────
@@ -223,6 +225,7 @@ function updateDistanceBadge(page, cm) {
 function startInference() {
     if (isRunning) return;
     isRunning = true;
+    sessionStartTime = Date.now();
     resetSessionCounters();
 
     ['cnn-bars-list', 'ensemble-bars-list'].forEach(id => {
