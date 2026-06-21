@@ -41,6 +41,7 @@ function renderChart() {
     // ══════════════════════════════════════════════════════
     // 1. Facial Expression Distribution — doughnut
     // ══════════════════════════════════════════════════════
+    const allEmotionsOrder = ['Happy','Sad','Fear','Angry','Disgust','Surprise','Neutral'];
     const distLabels = Object.keys(counts);
     const distData   = Object.values(counts);
     const distColors = distLabels.map(l => emotionColors[l] || '#ccc');
@@ -69,17 +70,26 @@ function renderChart() {
                             pointStyle   : 'circle',
                             usePointStyle: true,
                             padding      : 12,
+                            boxWidth     : 10,
+                            boxHeight    : 10,
                             generateLabels: chart => {
-                                const d = chart.data;
-                                return d.labels.map((label, i) => ({
-                                    text       : `${label}  ${distPcts[i]}%`,
-                                    fillStyle  : d.datasets[0].backgroundColor[i],
-                                    strokeStyle: 'transparent',
-                                    fontColor  : 'rgba(255,255,255,0.75)',
-                                    color      : 'rgba(255,255,255,0.75)',
-                                    index      : i,
-                                }));
-            }}},
+                                // ← always show all 7 emotions, fallback to --
+                                return allEmotionsOrder.map((emotion, i) => {
+                                    const count = counts[emotion] || 0;
+                                    const pct   = count > 0 ? ((count / distTotal) * 100).toFixed(1) : null;
+                                    return {
+                                        text       : `${emotion.toUpperCase()}  ${pct ? pct + '%' : '--'}`,
+                                        fillStyle  : emotionColors[emotion] || '#ccc',
+                                        strokeStyle: 'transparent',
+                                        fontColor  : 'rgba(255,255,255,0.75)',
+                                        color      : 'rgba(255,255,255,0.75)',
+                                        pointStyle : 'circle',
+                                        index      : i,
+                                    };
+                                });
+                            }
+                        }
+                    },
                     tooltip: { callbacks: {
                         label: ctx => ` ${ctx.label}: ${distPcts[ctx.dataIndex]}% (${ctx.parsed})`
                     }}
