@@ -288,7 +288,7 @@ async function exportObservationLog() {
         });
         y += 24;
 
-        // ── Emotion breakdown table ──
+        // ── Expression breakdown table ──
         const addSectionTitle = (label) => {
             checkPage(14);
             y += 3;
@@ -304,7 +304,7 @@ async function exportObservationLog() {
             y += 11;
         };
 
-        addSectionTitle('Emotion Breakdown');
+        addSectionTitle('Expression Breakdown');
         const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
         setFill(...MAROON);
@@ -603,8 +603,8 @@ async function exportPDF() {
         });
         y += 24;
 
-        // ── Emotion breakdown table ──
-        sectionTitle('Emotion Breakdown');
+        // ── Expression breakdown table ──
+        sectionTitle('Expression Breakdown');
         const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
         setFill(...MAROON);
@@ -612,7 +612,7 @@ async function exportPDF() {
         setColor(...WHITE);
         doc.setFontSize(7.5); doc.setFont('helvetica', 'bold');
         const cols = [M + 2, M + 30, M + 55, M + 85, M + 118];
-        ['Emotion', 'Count', 'Frequency', 'Avg Confidence', 'Bar'].forEach((h, i) => {
+        ['Expression', 'Count', 'Frequency', 'Avg Confidence', 'Bar'].forEach((h, i) => {
             doc.text(h, cols[i], y + 4.8);
         });
         y += 7;
